@@ -1,0 +1,6 @@
+{
+  "name": "Faya Primary Hospital ERP",
+  "description": "Comprehensive Hospital ERP & EMR platform with Reception, OPD, IPD Bed Management, Emergency Triage, Laboratory & Blood Bank, Radiology, Pharmacy, Operating Theater, Cashier POS, and Hospital HR/Admin.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
