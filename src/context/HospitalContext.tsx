@@ -199,7 +199,7 @@ export const HospitalProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return matched || DEMO_USERS[0];
   });
 
-  const [activeTab, setActiveTab] = useState<string>('RECEPTION');
+  const [activeTab, setActiveTab] = useState<string>('DASHBOARD');
   const [patients, setPatients] = useState<Patient[]>(INITIAL_PATIENTS);
   const [opdEncounters, setOpdEncounters] = useState<OPDEncounter[]>(INITIAL_OPD_ENCOUNTERS);
   const [opdQueue, setOpdQueue] = useState<OPDQueueItem[]>(INITIAL_OPD_QUEUE);
@@ -335,6 +335,7 @@ export const HospitalProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const logout = () => {
     setIsAuthenticated(false);
     setIsLocked(false);
+    setActiveTab('DASHBOARD');
     localStorage.setItem('fph_auth_status', 'false');
     localStorage.setItem('fph_lock_status', 'false');
     addToast('info', 'Logged Out', 'Staff session safely terminated.');
