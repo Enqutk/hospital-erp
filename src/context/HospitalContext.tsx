@@ -185,7 +185,7 @@ const HospitalContext = createContext<HospitalContextType | undefined>(undefined
 export const HospitalProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
     const saved = localStorage.getItem('fph_auth_status');
-    return saved !== null ? saved === 'true' : true;
+    return saved === 'true';
   });
 
   const [isLocked, setIsLocked] = useState<boolean>(() => {
