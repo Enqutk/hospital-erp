@@ -201,6 +201,9 @@ interface HospitalContextType {
   // Pharmacy Sub-View Navigation
   pharmacySubView: string;
   setPharmacySubView: (subView: string) => void;
+  // Emergency Department (ER) Sub-View Navigation
+  emergencySubView: string;
+  setEmergencySubView: (subView: string) => void;
   // Inpatient Department (IPD) Sub-View Navigation
   ipdSubView: string;
   setIpdSubView: (subView: string) => void;
@@ -240,6 +243,7 @@ export const HospitalProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [receptionSubView, setReceptionSubView] = useState<string>('DIRECTORY');
   const [labSubView, setLabSubView] = useState<string>('ORDERS');
   const [pharmacySubView, setPharmacySubView] = useState<string>('DISPENSARY');
+  const [emergencySubView, setEmergencySubView] = useState<string>('ACTIVE_CASES');
   const [ipdSubView, setIpdSubView] = useState<string>('DOCTOR_ORDERS');
   const [patients, setPatients] = useState<Patient[]>(INITIAL_PATIENTS);
   const [opdEncounters, setOpdEncounters] = useState<OPDEncounter[]>(INITIAL_OPD_ENCOUNTERS);
@@ -1717,6 +1721,8 @@ export const HospitalProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setLabSubView,
         pharmacySubView,
         setPharmacySubView,
+        emergencySubView,
+        setEmergencySubView,
         ipdSubView,
         setIpdSubView,
 

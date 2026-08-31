@@ -222,7 +222,7 @@
       "assignedDoctorName": "Dr. Almaz Bekele, MD",
       "priority": "Routine",
       "payerClass": "CBHI (Community Health Insurance)",
-      "status": "Waiting",
+      "status": "In Consultation",
       "routedAt": "14:28",
       "dispatchedBy": "Ephrem Tesfaye, MHA (Reception)",
       "vitals": {
@@ -2172,6 +2172,24 @@
     }
   ],
   "auditLogs": [
+    {
+      "userName": "Dr. Dawit Haile, MD",
+      "userRole": "OPD_DOCTOR",
+      "module": "Security & Auth",
+      "action": "Staff Sign-Out",
+      "details": "User USR-02 logged out from terminal.",
+      "id": "LOG-6187",
+      "timestamp": "2026-08-31 15:40:46"
+    },
+    {
+      "userName": "Dr. Dawit Haile, MD",
+      "userRole": "OPD_DOCTOR",
+      "module": "Security & Auth",
+      "action": "Quick Role Activation",
+      "details": "Active role profile switched to Consultant Physician (Station 2)",
+      "id": "LOG-5352",
+      "timestamp": "2026-08-31 15:33:55"
+    },
     {
       "userName": "Ephrem Tesfaye, MHA",
       "userRole": "ADMIN_HR",

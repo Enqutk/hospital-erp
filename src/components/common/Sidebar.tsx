@@ -56,6 +56,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
     setLabSubView,
     pharmacySubView,
     setPharmacySubView,
+    emergencySubView,
+    setEmergencySubView,
     ipdSubView,
     setIpdSubView,
     currentUser,
@@ -299,6 +301,31 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }
   ];
 
+  // Dedicated OPD Doctor navigation groups
+  const doctorNavigationSections = [
+    {
+      group: 'Overview & Intelligence',
+      items: [
+        {
+          id: 'DASHBOARD',
+          label: 'Doctor OPD Dashboard',
+          icon: LayoutDashboard
+        }
+      ]
+    },
+    {
+      group: 'Clinical Consultations',
+      items: [
+        {
+          id: 'OPD',
+          label: 'OPD Consultation Suite',
+          icon: Stethoscope,
+          badge: opdWaitingCount > 0 ? `${opdWaitingCount} wait` : undefined
+        }
+      ]
+    }
+  ];
+
   // Dedicated Inpatient Department (IPD Nurse) navigation groups
   const ipdNavigationSections = [
     {
@@ -507,6 +534,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }
     if (currentUser.role === 'LAB_TECH') {
       return labTechNavigationSections;
+    }
+    if (currentUser.role === 'OPD_DOCTOR') {
+      return doctorNavigationSections;
     }
     if (currentUser.role === 'PHARMACIST') {
       return pharmacistNavigationSections;

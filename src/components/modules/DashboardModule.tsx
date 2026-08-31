@@ -42,6 +42,7 @@ import { ReceptionAnalyticsView } from '../reception/ReceptionAnalyticsView';
 import { LabAnalyticsView } from '../lab/LabAnalyticsView';
 import { IPDAnalyticsView } from '../ipd/IPDAnalyticsView';
 import { PharmacyAnalyticsView } from '../pharmacy/PharmacyAnalyticsView';
+import { DoctorAnalyticsView } from '../opd/DoctorAnalyticsView';
 
 const PALETTE = {
   emerald: '#059669',
@@ -102,10 +103,14 @@ export const DashboardModule: React.FC = () => {
     auditLogs = []
   } = useHospital();
 
-  const [adminAnalyticsTab, setAdminAnalyticsTab] = React.useState<'EXECUTIVE' | 'RECEPTION' | 'LAB' | 'PHARMACY' | 'IPD'>('EXECUTIVE');
+  const [adminAnalyticsTab, setAdminAnalyticsTab] = React.useState<'EXECUTIVE' | 'RECEPTION' | 'OPD' | 'LAB' | 'PHARMACY' | 'IPD'>('EXECUTIVE');
 
   if (currentUser.role === 'RECEPTIONIST') {
     return <ReceptionAnalyticsView />;
+  }
+
+  if (currentUser.role === 'OPD_DOCTOR') {
+    return <DoctorAnalyticsView />;
   }
 
   if (currentUser.role === 'LAB_TECH') {
@@ -366,6 +371,18 @@ export const DashboardModule: React.FC = () => {
 
           <button
             type="button"
+            onClick={() => setAdminAnalyticsTab('OPD')}
+            className={`px-3.5 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+              adminAnalyticsTab === 'OPD'
+                ? 'bg-indigo-700 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            Doctor OPD Clinical Analytics
+          </button>
+
+          <button
+            type="button"
             onClick={() => setAdminAnalyticsTab('LAB')}
             className={`px-3.5 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
               adminAnalyticsTab === 'LAB'
@@ -404,6 +421,8 @@ export const DashboardModule: React.FC = () => {
 
       {adminAnalyticsTab === 'RECEPTION' ? (
         <ReceptionAnalyticsView />
+      ) : adminAnalyticsTab === 'OPD' ? (
+        <DoctorAnalyticsView />
       ) : adminAnalyticsTab === 'LAB' ? (
         <LabAnalyticsView />
       ) : adminAnalyticsTab === 'PHARMACY' ? (
