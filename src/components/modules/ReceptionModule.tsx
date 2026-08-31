@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { UserPlus, LayoutGrid, Users, UserCheck, Activity } from 'lucide-react';
 import { useHospital } from '../../context/HospitalContext';
 import { Patient, Vitals } from '../../types';
 import { PatientDirectoryView } from '../reception/PatientDirectoryView';
-import { PatientDetailPage } from '../reception/PatientDetailPage';
 import { LiveQueueBoardView } from '../reception/LiveQueueBoardView';
 import { NewPatientModal } from '../reception/NewPatientModal';
 import { DispatchToDoctorModal } from '../reception/DispatchToDoctorModal';
+import { ReceptionPrintStationView } from '../reception/ReceptionPrintStationView';
+import { ReceptionTariffLookupView } from '../reception/ReceptionTariffLookupView';
+import { ReceptionShiftSummaryView } from '../reception/ReceptionShiftSummaryView';
+import { PatientDetailModal } from '../modals/PatientDetailModal';
 
 interface ReceptionModuleProps {
   onOpenPatientCard?: (patient: Patient) => void;
@@ -25,12 +27,14 @@ export const ReceptionModule: React.FC<ReceptionModuleProps> = ({
     setSelectedPatientMrn,
     getPatientByMrn,
     opdQueue,
-    dispatchPatientToOPD
+    dispatchPatientToOPD,
+    receptionSubView,
+    setReceptionSubView
   } = useHospital();
 
-  const [activeSubView, setActiveSubView] = useState<'DIRECTORY' | 'DETAIL' | 'QUEUE_BOARD'>('DIRECTORY');
   const [showAddPatientModal, setShowAddPatientModal] = useState(false);
   const [dispatchModalPatient, setDispatchModalPatient] = useState<Patient | null>(null);
+  const [detailModalPatient, setDetailModalPatient] = useState<Patient | null>(null);
 
   const selectedPatient = selectedPatientMrn
     ? getPatientByMrn(selectedPatientMrn) || patients[0]
@@ -38,7 +42,10 @@ export const ReceptionModule: React.FC<ReceptionModuleProps> = ({
 
   const handleSelectPatient = (mrn: string) => {
     setSelectedPatientMrn(mrn);
-    setActiveSubView('DETAIL');
+    const p = getPatientByMrn(mrn) || patients.find((x) => x.mrn === mrn);
+    if (p) {
+      setDetailModalPatient(p);
+    }
   };
 
   const handlePrintCard = (patient: Patient) => {
@@ -61,7 +68,7 @@ export const ReceptionModule: React.FC<ReceptionModuleProps> = ({
       dispatchPatientToOPD(created.mrn, targetRoom, 'Routine', vitals);
     }
     setSelectedPatientMrn(created.mrn);
-    setActiveSubView('DETAIL');
+    setDetailModalPatient(created);
   };
 
   const handleDispatchPatient = (
@@ -74,80 +81,10 @@ export const ReceptionModule: React.FC<ReceptionModuleProps> = ({
     setDispatchModalPatient(null);
   };
 
-  const waitingInQueueCount = (opdQueue || []).filter((q) => q.status === 'Waiting').length;
-
   return (
     <div className="space-y-4">
-      {/* Module Navigation & Header Bar */}
-      <div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="font-bold text-slate-900 text-base tracking-tight">Reception & Patient Registry</h1>
-            <span className="text-[11px] bg-emerald-50 text-emerald-800 border border-emerald-200/60 font-bold px-2 py-0.5 rounded-md">
-              Front Desk
-            </span>
-          </div>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Master patient index, registration, electronic health records, and smart clinical routing.
-          </p>
-        </div>
-
-        {/* Cohesive Sub-Navigation Segmented Control */}
-        <div className="flex items-center bg-slate-100/90 p-1 rounded-xl border border-slate-200/80 self-start md:self-auto shadow-inner">
-          <button
-            type="button"
-            onClick={() => setActiveSubView('DIRECTORY')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-              activeSubView === 'DIRECTORY'
-                ? 'bg-white text-slate-900 shadow-xs border border-slate-200/60'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-            }`}
-          >
-            <Users className="w-3.5 h-3.5" />
-            <span>Patient Directory</span>
-            <span className="text-[10px] bg-slate-200/80 text-slate-700 px-1.5 py-0.2 rounded-full font-bold">
-              {patients.length}
-            </span>
-          </button>
-
-          {selectedPatient && (
-            <button
-              type="button"
-              onClick={() => setActiveSubView('DETAIL')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer max-w-[200px] truncate ${
-                activeSubView === 'DETAIL'
-                  ? 'bg-white text-slate-900 shadow-xs border border-slate-200/60'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-              }`}
-              title={`${selectedPatient.firstName} ${selectedPatient.lastName}`}
-            >
-              <UserCheck className="w-3.5 h-3.5 text-emerald-600" />
-              <span className="truncate">Chart: {selectedPatient.firstName}</span>
-            </button>
-          )}
-
-          <button
-            type="button"
-            onClick={() => setActiveSubView('QUEUE_BOARD')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-              activeSubView === 'QUEUE_BOARD'
-                ? 'bg-white text-slate-900 shadow-xs border border-slate-200/60'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-            }`}
-          >
-            <Activity className="w-3.5 h-3.5 text-blue-600" />
-            <span>Live OPD Queue</span>
-            {waitingInQueueCount > 0 && (
-              <span className="text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.2 rounded-full font-bold">
-                {waitingInQueueCount}
-              </span>
-            )}
-          </button>
-        </div>
-      </div>
-
       {/* SUBVIEW 1: MASTER PATIENT DIRECTORY */}
-      {activeSubView === 'DIRECTORY' && (
+      {receptionSubView === 'DIRECTORY' && (
         <PatientDirectoryView
           patients={patients}
           opdQueue={opdQueue}
@@ -158,25 +95,42 @@ export const ReceptionModule: React.FC<ReceptionModuleProps> = ({
         />
       )}
 
-      {/* SUBVIEW 2: DEDICATED PATIENT DETAIL PAGE */}
-      {activeSubView === 'DETAIL' && selectedPatient && (
-        <PatientDetailPage
-          patient={selectedPatient}
-          onBack={() => setActiveSubView('DIRECTORY')}
-          onOpenDispatchModal={(patient) => setDispatchModalPatient(patient)}
-          onOpenPrintCard={handlePrintCard}
-        />
-      )}
-
-      {/* SUBVIEW 3: LIVE OPD QUEUE BOARD */}
-      {activeSubView === 'QUEUE_BOARD' && (
+      {/* SUBVIEW 2: LIVE OPD QUEUE BOARD */}
+      {receptionSubView === 'QUEUE_BOARD' && (
         <LiveQueueBoardView
           opdQueue={opdQueue}
           onSelectPatient={handleSelectPatient}
         />
       )}
 
-      {/* MODAL 1: REGISTER NEW PATIENT */}
+      {/* SUBVIEW 3: ID CARD PRINTING DESK */}
+      {receptionSubView === 'PRINT_STATION' && (
+        <ReceptionPrintStationView
+          onOpenPatientCard={handlePrintCard}
+        />
+      )}
+
+      {/* SUBVIEW 4: HOSPITAL TARIFFS & FEE SCHEDULE */}
+      {receptionSubView === 'TARIFFS' && (
+        <ReceptionTariffLookupView />
+      )}
+
+      {/* SUBVIEW 5: FRONT DESK SHIFT SUMMARY */}
+      {receptionSubView === 'SHIFT_SUMMARY' && (
+        <ReceptionShiftSummaryView />
+      )}
+
+      {/* MODAL 1: PATIENT DETAILS OVERLAY MODAL */}
+      {detailModalPatient && (
+        <PatientDetailModal
+          patient={detailModalPatient}
+          onClose={() => setDetailModalPatient(null)}
+          onOpenDispatchModal={(p) => setDispatchModalPatient(p)}
+          onOpenPrintCard={handlePrintCard}
+        />
+      )}
+
+      {/* MODAL 2: REGISTER NEW PATIENT */}
       {showAddPatientModal && (
         <NewPatientModal
           onClose={() => setShowAddPatientModal(false)}
@@ -185,7 +139,7 @@ export const ReceptionModule: React.FC<ReceptionModuleProps> = ({
         />
       )}
 
-      {/* MODAL 2: DISPATCH TO OPD DOCTOR */}
+      {/* MODAL 3: DISPATCH TO OPD DOCTOR */}
       {dispatchModalPatient && (
         <DispatchToDoctorModal
           patient={dispatchModalPatient}

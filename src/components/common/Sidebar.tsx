@@ -14,7 +14,12 @@ import {
   ChevronRight,
   Activity,
   UserCheck,
-  LayoutDashboard
+  LayoutDashboard,
+  CreditCard,
+  FileSpreadsheet,
+  Clock,
+  Send,
+  UserPlus
 } from 'lucide-react';
 import { useHospital } from '../../context/HospitalContext';
 import { UserRole } from '../../types';
@@ -35,6 +40,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const {
     activeTab,
     setActiveTab,
+    receptionSubView,
+    setReceptionSubView,
     currentUser,
     patients = [],
     emergencyRecords = [],
@@ -62,8 +69,64 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const opdWaitingCount = (opdQueue || []).filter((q) => q.status === 'Waiting').length;
   const pendingLeaveCount = (leaveRequests || []).filter((l) => l.status === 'Pending').length;
 
-  // Navigation sections with Administration & Dashboard at the top
-  const allNavigationSections = [
+  // Dedicated receptionist navigation groups for Reception & Patient Registry workstation
+  const receptionistNavigationSections = [
+    {
+      group: 'Patient Registry',
+      items: [
+        {
+          id: 'RECEPTION',
+          subView: 'DIRECTORY',
+          label: 'Patient Directory & EMR',
+          icon: Users,
+          badge: patients.length ? `${patients.length}` : undefined
+        },
+        {
+          id: 'RECEPTION',
+          subView: 'PRINT_STATION',
+          label: 'ID Cards & Barcodes',
+          icon: CreditCard
+        }
+      ]
+    },
+    {
+      group: 'OPD Queue & Routing',
+      items: [
+        {
+          id: 'RECEPTION',
+          subView: 'QUEUE_BOARD',
+          label: 'Live OPD Queue Board',
+          icon: Activity,
+          badge: opdWaitingCount > 0 ? `${opdWaitingCount} wait` : undefined
+        }
+      ]
+    },
+    {
+      group: 'Tariffs & Pricing',
+      items: [
+        {
+          id: 'RECEPTION',
+          subView: 'TARIFFS',
+          label: 'Service Tariffs & Fees',
+          icon: Receipt
+        }
+      ]
+    },
+    {
+      group: 'Shift & Governance',
+      items: [
+        {
+          id: 'RECEPTION',
+          subView: 'SHIFT_SUMMARY',
+          label: 'Shift Summary & Roster',
+          icon: Clock
+        }
+      ]
+    }
+  ];
+
+  // Standard full navigation sections for Admin and other roles
+  const standardNavigationSections = [
     {
       group: 'Executive & Admin',
       items: [
@@ -93,10 +156,40 @@ export const Sidebar: React.FC<SidebarProps> = ({
       items: [
         {
           id: 'RECEPTION',
+          subView: 'DIRECTORY',
           label: 'Reception & Registry',
           icon: Users,
           role: 'RECEPTIONIST' as UserRole,
           badge: patients.length ? `${patients.length}` : undefined
+        },
+        {
+          id: 'RECEPTION',
+          subView: 'QUEUE_BOARD',
+          label: 'Live OPD Queue Board',
+          icon: Activity,
+          role: 'RECEPTIONIST' as UserRole,
+          badge: opdWaitingCount > 0 ? `${opdWaitingCount} wait` : undefined
+        },
+        {
+          id: 'RECEPTION',
+          subView: 'PRINT_STATION',
+          label: 'ID Cards & Barcodes',
+          icon: CreditCard,
+          role: 'RECEPTIONIST' as UserRole
+        },
+        {
+          id: 'RECEPTION',
+          subView: 'TARIFFS',
+          label: 'Service Tariffs & Pricing',
+          icon: Receipt,
+          role: 'RECEPTIONIST' as UserRole
+        },
+        {
+          id: 'RECEPTION',
+          subView: 'SHIFT_SUMMARY',
+          label: 'Shift Summary & Roster',
+          icon: Clock,
+          role: 'RECEPTIONIST' as UserRole
         }
       ]
     },
@@ -172,12 +265,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   // RBAC Navigation Filtering:
-  // ADMIN_HR has access to all hospital modules.
-  // Other staff only see modules matching their assigned station / role.
   const navigationSections = useMemo(() => {
+    if (currentUser.role === 'RECEPTIONIST') {
+      return receptionistNavigationSections;
+    }
+
     const isSuperAdmin = currentUser.role === 'ADMIN_HR';
 
-    return allNavigationSections
+    return standardNavigationSections
       .map((section) => {
         const filteredItems = section.items.filter((item) => {
           if (isSuperAdmin) return true;
@@ -188,8 +283,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
       .filter((section) => section.items.length > 0);
   }, [currentUser.role, occupiedBedsCount, pendingLabCount, pendingRxCount, opdWaitingCount, emergencyActiveCount, pendingLeaveCount, patients.length, staffList.length]);
 
-  const handleSelectModule = (id: string) => {
-    setActiveTab(id);
+  const handleSelectModule = (item: any) => {
+    setActiveTab(item.id);
+    if (item.id === 'RECEPTION' && item.subView) {
+      setReceptionSubView(item.subView);
+    }
     if (onCloseMobile) {
       onCloseMobile();
     }
@@ -201,7 +299,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <div>
         <div className="h-14 px-3.5 border-b border-slate-200 flex items-center justify-between">
           <div className="flex items-center space-x-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white font-bold shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white font-bold shrink-0 shadow-xs">
               <Activity className="w-4.5 h-4.5" />
             </div>
             {isOpen && (
@@ -209,7 +307,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <div className="font-bold text-sm text-slate-900 leading-tight truncate">
                   VitalSync<span className="text-emerald-600">ERP</span>
                 </div>
-                <div className="text-[11px] text-slate-500 truncate">
+                <div className="text-[10px] text-slate-400 truncate">
                   Faya Primary Hospital
                 </div>
               </div>
@@ -231,27 +329,31 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {navigationSections.map((section) => (
             <div key={section.group} className="space-y-0.5">
               {isOpen && (
-                <div className="px-2.5 pt-1.5 pb-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                <div className="px-2.5 pt-1.5 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                   {section.group}
                 </div>
               )}
-              {section.items.map((item) => {
-                const isActive =
-                  activeTab === item.id ||
-                  (item.id === 'LAB_BLOOD' && (activeTab === 'LAB' || activeTab === 'lab'));
-                const isUserStation = currentUser.role === item.role;
+              {section.items.map((item: any) => {
+                let isActive = false;
+                if (item.id === 'RECEPTION') {
+                  isActive = activeTab === 'RECEPTION' && (!item.subView || receptionSubView === item.subView);
+                } else {
+                  isActive = activeTab === item.id || (item.id === 'LAB_BLOOD' && (activeTab === 'LAB' || activeTab === 'lab'));
+                }
+
+                const isUserStation = currentUser.role === (item.role || 'RECEPTIONIST');
                 const IconComponent = item.icon;
 
                 return (
                   <button
-                    key={item.id}
-                    onClick={() => handleSelectModule(item.id)}
+                    key={`${item.id}-${item.subView || ''}-${item.label}`}
+                    onClick={() => handleSelectModule(item)}
                     title={!isOpen ? item.label : undefined}
-                    className={`w-full text-left rounded-lg transition-colors flex items-center cursor-pointer ${
+                    className={`w-full text-left rounded-xl transition-all flex items-center cursor-pointer ${
                       isOpen ? 'px-2.5 py-2' : 'p-2.5 justify-center'
                     } ${
                       isActive
-                        ? 'bg-slate-900 text-white font-semibold'
+                        ? 'bg-slate-900 text-white font-semibold shadow-xs'
                         : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-medium'
                     }`}
                   >
@@ -275,9 +377,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
                     {isOpen && item.badge && (
                       <span
-                        className={`text-[10px] font-medium px-1.5 py-0.2 rounded shrink-0 ml-1.5 ${
+                        className={`text-[10px] font-bold px-1.5 py-0.2 rounded-md shrink-0 ml-1.5 ${
                           isActive
-                            ? 'bg-slate-800 text-slate-200'
+                            ? 'bg-slate-800 text-emerald-300'
                             : item.isAlert
                             ? 'bg-rose-100 text-rose-700 font-bold'
                             : 'bg-slate-100 text-slate-600'
@@ -297,7 +399,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Bottom Footer */}
       {isOpen && (
         <div className="p-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between text-[11px] text-slate-500">
-          <span>HMIS System v2.4</span>
+          <span className="font-semibold text-slate-700">HMIS System v2.4</span>
+          <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded font-bold">Online</span>
         </div>
       )}
     </div>
@@ -308,7 +411,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Desktop Persistent Sidebar */}
       <aside
         className={`hidden md:flex flex-col border-r border-slate-200 shrink-0 sticky top-0 h-screen transition-all duration-200 z-30 ${
-          isOpen ? 'w-56' : 'w-16'
+          isOpen ? 'w-60' : 'w-16'
         }`}
       >
         {sidebarContent}

@@ -189,7 +189,9 @@ interface HospitalContextType {
   addToast: (type: ToastNotification['type'], title: string, message: string) => void;
   removeToast: (id: string) => void;
   selectedPatientMrn: string | null;
-  setSelectedPatientMrn: (mrn: string | null) => void;
+  // Receptionist Sub-View Navigation
+  receptionSubView: string;
+  setReceptionSubView: (subView: string) => void;
 
   // Local File Cache & Storage Persistence
   storageDiagnostics: StorageDiagnostics | null;
@@ -223,6 +225,7 @@ export const HospitalProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   });
 
   const [activeTab, setActiveTab] = useState<string>('DASHBOARD');
+  const [receptionSubView, setReceptionSubView] = useState<string>('DIRECTORY');
   const [patients, setPatients] = useState<Patient[]>(INITIAL_PATIENTS);
   const [opdEncounters, setOpdEncounters] = useState<OPDEncounter[]>(INITIAL_OPD_ENCOUNTERS);
   const [opdQueue, setOpdQueue] = useState<OPDQueueItem[]>(INITIAL_OPD_QUEUE);
@@ -1712,6 +1715,9 @@ export const HospitalProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         removeToast,
         selectedPatientMrn,
         setSelectedPatientMrn,
+
+        receptionSubView,
+        setReceptionSubView,
 
         storageDiagnostics,
         isCacheSyncing,

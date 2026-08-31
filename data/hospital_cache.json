@@ -2158,6 +2158,51 @@
   ],
   "auditLogs": [
     {
+      "userName": "Nurse Rahel Tadesse, BSN",
+      "userRole": "IPD_NURSE",
+      "module": "Security & Auth",
+      "action": "Quick Role Activation",
+      "details": "Active role profile switched to Charge Nurse & Bed Manager",
+      "id": "LOG-1016",
+      "timestamp": "2026-08-31 14:49:31"
+    },
+    {
+      "userName": "Sister Selamawit Bekele",
+      "userRole": "RECEPTIONIST",
+      "module": "Security & Auth",
+      "action": "Quick Role Activation",
+      "details": "Active role profile switched to Chief Admissions Officer",
+      "id": "LOG-5686",
+      "timestamp": "2026-08-31 14:45:55"
+    },
+    {
+      "userName": "Nurse Rahel Tadesse, BSN",
+      "userRole": "IPD_NURSE",
+      "module": "Security & Auth",
+      "action": "Staff Sign-Out",
+      "details": "User USR-03 logged out from terminal.",
+      "id": "LOG-4079",
+      "timestamp": "2026-08-31 14:45:54"
+    },
+    {
+      "userName": "Nurse Rahel Tadesse, BSN",
+      "userRole": "IPD_NURSE",
+      "module": "Security & Auth",
+      "action": "Quick Role Activation",
+      "details": "Active role profile switched to Charge Nurse & Bed Manager",
+      "id": "LOG-7664",
+      "timestamp": "2026-08-31 14:41:07"
+    },
+    {
+      "userName": "Sister Selamawit Bekele",
+      "userRole": "RECEPTIONIST",
+      "module": "Security & Auth",
+      "action": "Staff Sign-Out",
+      "details": "User USR-01 logged out from terminal.",
+      "id": "LOG-5342",
+      "timestamp": "2026-08-31 14:41:05"
+    },
+    {
       "userName": "Sister Selamawit Bekele",
       "userRole": "RECEPTIONIST",
       "module": "Security & Auth",
