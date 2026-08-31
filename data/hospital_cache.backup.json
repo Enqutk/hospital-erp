@@ -2176,6 +2176,15 @@
       "userName": "Dr. Yonas Alemayehu, MD",
       "userRole": "EMERGENCY_OFFICER",
       "module": "Security & Auth",
+      "action": "Staff Sign-Out",
+      "details": "User USR-04 logged out from terminal.",
+      "id": "LOG-1961",
+      "timestamp": "2026-08-31 15:48:31"
+    },
+    {
+      "userName": "Dr. Yonas Alemayehu, MD",
+      "userRole": "EMERGENCY_OFFICER",
+      "module": "Security & Auth",
       "action": "Quick Role Activation",
       "details": "Active role profile switched to Trauma & Emergency Specialist",
       "id": "LOG-2385",

@@ -2173,6 +2173,15 @@
   ],
   "auditLogs": [
     {
+      "userName": "Tigist Mengistu",
+      "userRole": "CASHIER",
+      "module": "Security & Auth",
+      "action": "Quick Role Activation",
+      "details": "Active role profile switched to Senior Cashier & POS Operator",
+      "id": "LOG-8776",
+      "timestamp": "2026-08-31 15:48:58"
+    },
+    {
       "userName": "Dr. Yonas Alemayehu, MD",
       "userRole": "EMERGENCY_OFFICER",
       "module": "Security & Auth",
