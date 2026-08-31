@@ -2176,6 +2176,15 @@
       "userName": "Ephrem Tesfaye, MHA",
       "userRole": "ADMIN_HR",
       "module": "Security & Auth",
+      "action": "Staff Sign-Out",
+      "details": "User USR-09 logged out from terminal.",
+      "id": "LOG-1284",
+      "timestamp": "2026-08-31 16:08:31"
+    },
+    {
+      "userName": "Ephrem Tesfaye, MHA",
+      "userRole": "ADMIN_HR",
+      "module": "Security & Auth",
       "action": "Quick Role Activation",
       "details": "Active role profile switched to Hospital Managing Director",
       "id": "LOG-8567",

@@ -2173,6 +2173,15 @@
   ],
   "auditLogs": [
     {
+      "userName": "Ephrem Tesfaye, MHA",
+      "userRole": "ADMIN_HR",
+      "module": "Security & Auth",
+      "action": "Quick Role Activation",
+      "details": "Active role profile switched to Hospital Managing Director",
+      "id": "LOG-8567",
+      "timestamp": "2026-08-31 16:06:18"
+    },
+    {
       "userName": "Amanuel Kebede, MLS",
       "userRole": "LAB_TECH",
       "module": "Security & Auth",
