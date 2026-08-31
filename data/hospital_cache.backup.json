@@ -17,7 +17,7 @@
       "allergies": [
         "Quo id quam culpa te"
       ],
-      "activeStation": "Reception Registered",
+      "activeStation": "OPD Room 1 (Queue #A-02)",
       "mrn": "FPH-2025-0107",
       "registeredAt": "2026-08-31 14:27"
     },
@@ -213,6 +213,27 @@
     }
   ],
   "opdQueue": [
+    {
+      "queueId": "Q-0002",
+      "mrn": "FPH-2025-0107",
+      "patientName": "Necessitatibus maior Culpa quasi do reru Distinctio Lorem mo",
+      "tokenNumber": "A-02",
+      "assignedRoom": 1,
+      "assignedDoctorName": "Dr. Almaz Bekele, MD",
+      "priority": "Routine",
+      "payerClass": "CBHI (Community Health Insurance)",
+      "status": "Waiting",
+      "routedAt": "14:28",
+      "dispatchedBy": "Ephrem Tesfaye, MHA (Reception)",
+      "vitals": {
+        "bpSystolic": 120,
+        "bpDiastolic": 80,
+        "heartRate": 76,
+        "respRate": 18,
+        "tempCelsius": 37,
+        "spO2": 98
+      }
+    },
     {
       "queueId": "Q-001",
       "mrn": "FPH-2025-0101",
@@ -2136,6 +2157,33 @@
     }
   ],
   "auditLogs": [
+    {
+      "userName": "Ephrem Tesfaye, MHA",
+      "userRole": "ADMIN_HR",
+      "module": "Security & Auth",
+      "action": "Quick Role Activation",
+      "details": "Active role profile switched to Hospital Managing Director",
+      "id": "LOG-0427",
+      "timestamp": "2026-08-31 14:33:20"
+    },
+    {
+      "userName": "Ephrem Tesfaye, MHA",
+      "userRole": "ADMIN_HR",
+      "module": "Security & Auth",
+      "action": "Staff Sign-Out",
+      "details": "User USR-09 logged out from terminal.",
+      "id": "LOG-8616",
+      "timestamp": "2026-08-31 14:31:28"
+    },
+    {
+      "userName": "Ephrem Tesfaye, MHA",
+      "userRole": "ADMIN_HR",
+      "module": "Reception & Registry",
+      "action": "Card Sent to OPD",
+      "details": "Dispatched Necessitatibus maior to OPD Room 1 (Dr. Almaz Bekele, MD) with token A-02",
+      "id": "LOG-0002",
+      "timestamp": "2026-08-31 14:28:00"
+    },
     {
       "id": "LOG-001",
       "timestamp": "2025-05-10 10:35:12",

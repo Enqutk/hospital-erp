@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { UserPlus, LayoutGrid, Users, UserCheck } from 'lucide-react';
+import { UserPlus, LayoutGrid, Users, UserCheck, Activity } from 'lucide-react';
 import { useHospital } from '../../context/HospitalContext';
 import { Patient, Vitals } from '../../types';
 import { PatientDirectoryView } from '../reception/PatientDirectoryView';
@@ -74,14 +74,16 @@ export const ReceptionModule: React.FC<ReceptionModuleProps> = ({
     setDispatchModalPatient(null);
   };
 
+  const waitingInQueueCount = (opdQueue || []).filter((q) => q.status === 'Waiting').length;
+
   return (
     <div className="space-y-4">
-      {/* Module Header Bar */}
-      <div className="bg-white border border-slate-200 rounded-lg p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      {/* Module Navigation & Header Bar */}
+      <div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <span className="font-bold text-slate-900 text-sm">Reception & Patient Registry</span>
-            <span className="text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-medium">
+            <h1 className="font-bold text-slate-900 text-base tracking-tight">Reception & Patient Registry</h1>
+            <span className="text-[11px] bg-emerald-50 text-emerald-800 border border-emerald-200/60 font-bold px-2 py-0.5 rounded-md">
               Front Desk
             </span>
           </div>
@@ -90,44 +92,56 @@ export const ReceptionModule: React.FC<ReceptionModuleProps> = ({
           </p>
         </div>
 
-        {/* Top Navigation Tabs */}
-        <div className="flex items-center gap-1.5 self-start sm:self-auto">
+        {/* Cohesive Sub-Navigation Segmented Control */}
+        <div className="flex items-center bg-slate-100/90 p-1 rounded-xl border border-slate-200/80 self-start md:self-auto shadow-inner">
           <button
             type="button"
             onClick={() => setActiveSubView('DIRECTORY')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
               activeSubView === 'DIRECTORY'
-                ? 'bg-slate-900 text-white'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                ? 'bg-white text-slate-900 shadow-xs border border-slate-200/60'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
             }`}
           >
-            Patient Directory
+            <Users className="w-3.5 h-3.5" />
+            <span>Patient Directory</span>
+            <span className="text-[10px] bg-slate-200/80 text-slate-700 px-1.5 py-0.2 rounded-full font-bold">
+              {patients.length}
+            </span>
           </button>
 
           {selectedPatient && (
             <button
               type="button"
               onClick={() => setActiveSubView('DETAIL')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer max-w-[200px] truncate ${
                 activeSubView === 'DETAIL'
-                  ? 'bg-slate-900 text-white'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  ? 'bg-white text-slate-900 shadow-xs border border-slate-200/60'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
               }`}
+              title={`${selectedPatient.firstName} ${selectedPatient.lastName}`}
             >
-              Patient Details ({selectedPatient.firstName} {selectedPatient.lastName})
+              <UserCheck className="w-3.5 h-3.5 text-emerald-600" />
+              <span className="truncate">Chart: {selectedPatient.firstName}</span>
             </button>
           )}
 
           <button
             type="button"
             onClick={() => setActiveSubView('QUEUE_BOARD')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
               activeSubView === 'QUEUE_BOARD'
-                ? 'bg-slate-900 text-white'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                ? 'bg-white text-slate-900 shadow-xs border border-slate-200/60'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
             }`}
           >
-            Live OPD Queue
+            <Activity className="w-3.5 h-3.5 text-blue-600" />
+            <span>Live OPD Queue</span>
+            {waitingInQueueCount > 0 && (
+              <span className="text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.2 rounded-full font-bold">
+                {waitingInQueueCount}
+              </span>
+            )}
           </button>
         </div>
       </div>

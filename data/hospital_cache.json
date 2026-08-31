@@ -2160,6 +2160,24 @@
     {
       "userName": "Ephrem Tesfaye, MHA",
       "userRole": "ADMIN_HR",
+      "module": "Security & Auth",
+      "action": "Quick Role Activation",
+      "details": "Active role profile switched to Hospital Managing Director",
+      "id": "LOG-0427",
+      "timestamp": "2026-08-31 14:33:20"
+    },
+    {
+      "userName": "Ephrem Tesfaye, MHA",
+      "userRole": "ADMIN_HR",
+      "module": "Security & Auth",
+      "action": "Staff Sign-Out",
+      "details": "User USR-09 logged out from terminal.",
+      "id": "LOG-8616",
+      "timestamp": "2026-08-31 14:31:28"
+    },
+    {
+      "userName": "Ephrem Tesfaye, MHA",
+      "userRole": "ADMIN_HR",
       "module": "Reception & Registry",
       "action": "Card Sent to OPD",
       "details": "Dispatched Necessitatibus maior to OPD Room 1 (Dr. Almaz Bekele, MD) with token A-02",
