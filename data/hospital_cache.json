@@ -2173,6 +2173,51 @@
   ],
   "auditLogs": [
     {
+      "userName": "Dr. Yonas Alemayehu, MD",
+      "userRole": "EMERGENCY_OFFICER",
+      "module": "Security & Auth",
+      "action": "Staff Sign-Out",
+      "details": "User USR-04 logged out from terminal.",
+      "id": "LOG-0792",
+      "timestamp": "2026-08-31 15:59:30"
+    },
+    {
+      "userName": "Dr. Yonas Alemayehu, MD",
+      "userRole": "EMERGENCY_OFFICER",
+      "module": "Security & Auth",
+      "action": "Quick Role Activation",
+      "details": "Active role profile switched to Trauma & Emergency Specialist",
+      "id": "LOG-7660",
+      "timestamp": "2026-08-31 15:59:27"
+    },
+    {
+      "userName": "Dr. Bethlehem Girma, MD",
+      "userRole": "RADIOLOGIST",
+      "module": "Security & Auth",
+      "action": "Staff Sign-Out",
+      "details": "User USR-06 logged out from terminal.",
+      "id": "LOG-5571",
+      "timestamp": "2026-08-31 15:59:25"
+    },
+    {
+      "userName": "Dr. Bethlehem Girma, MD",
+      "userRole": "RADIOLOGIST",
+      "module": "Security & Auth",
+      "action": "Quick Role Activation",
+      "details": "Active role profile switched to Consultant Radiologist",
+      "id": "LOG-0343",
+      "timestamp": "2026-08-31 15:59:20"
+    },
+    {
+      "userName": "Dr. Michael Assefa, FACS",
+      "userRole": "OT_COORDINATOR",
+      "module": "Security & Auth",
+      "action": "Staff Sign-Out",
+      "details": "User USR-10 logged out from terminal.",
+      "id": "LOG-6271",
+      "timestamp": "2026-08-31 15:59:16"
+    },
+    {
       "userName": "Pharm. Henok Worku, BPharm",
       "userRole": "PHARMACIST",
       "module": "Security & Auth",

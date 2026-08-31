@@ -61,12 +61,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
     setEmergencySubView,
     cashierSubView,
     setCashierSubView,
+    otSubView,
+    setOtSubView,
     ipdSubView,
     setIpdSubView,
     currentUser,
     patients = [],
     emergencyRecords = [],
     billingInvoices = [],
+    surgeries = [],
     prescriptions = [],
     drugInventory = [],
     labOrders = [],
@@ -86,6 +89,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
       onToggle();
     }
   };
+
+  const activeSurgeriesCount = (surgeries || []).filter((s) => s.status === 'In Progress').length;
+  const scheduledSurgeriesCount = (surgeries || []).filter((s) => s.status === 'Scheduled').length;
 
   const emergencyActiveCount = (emergencyRecords || []).filter(
     (e) => e.status === 'Triaged' || e.status === 'In Trauma Bay'
@@ -429,6 +435,56 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }
   ];
 
+  // Dedicated Operating Theater (OT Coordinator / Chief of Surgery) navigation groups
+  const otCoordinatorNavigationSections = [
+    {
+      group: 'Overview & Intelligence',
+      items: [
+        {
+          id: 'DASHBOARD',
+          label: 'OT Surgical Dashboard',
+          icon: LayoutDashboard
+        }
+      ]
+    },
+    {
+      group: 'Surgical Suite Operations',
+      items: [
+        {
+          id: 'OT',
+          subView: 'SUITES',
+          label: 'Live Operating Suites',
+          icon: Scissors,
+          badge: activeSurgeriesCount > 0 ? `${activeSurgeriesCount} active` : undefined
+        },
+        {
+          id: 'OT',
+          subView: 'REGISTRY',
+          label: 'Surgical Schedule & Registry',
+          icon: Calendar,
+          badge: scheduledSurgeriesCount > 0 ? `${scheduledSurgeriesCount} book` : undefined
+        },
+        {
+          id: 'OT',
+          subView: 'WHO_CHECKLIST',
+          label: 'WHO Safety Protocol',
+          icon: ShieldCheck
+        }
+      ]
+    },
+    {
+      group: 'Shift & Intelligence',
+      items: [
+        {
+          id: 'OT',
+          subView: 'ANALYTICS',
+          label: 'Theater Analytics',
+          icon: BarChart3
+        }
+      ]
+    }
+  ];
+
   // Dedicated Inpatient Department (IPD Nurse) navigation groups
   const ipdNavigationSections = [
     {
@@ -660,6 +716,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
     if (currentUser.role === 'CASHIER') {
       return cashierNavigationSections;
     }
+    if (currentUser.role === 'OT_COORDINATOR') {
+      return otCoordinatorNavigationSections;
+    }
     if (currentUser.role === 'IPD_NURSE') {
       return ipdNavigationSections;
     }
@@ -710,6 +769,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }
     if (item.id === 'CASHIER' && item.subView) {
       setCashierSubView(item.subView);
+    }
+    if (item.id === 'OT' && item.subView) {
+      setOtSubView(item.subView);
     }
     if (item.id === 'IPD' && item.subView) {
       setIpdSubView(item.subView);
@@ -771,6 +833,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   isActive = activeTab === 'EMERGENCY' && (!item.subView || emergencySubView === item.subView);
                 } else if (item.id === 'CASHIER') {
                   isActive = activeTab === 'CASHIER' && (!item.subView || cashierSubView === item.subView);
+                } else if (item.id === 'OT') {
+                  isActive = activeTab === 'OT' && (!item.subView || otSubView === item.subView);
                 } else if (item.id === 'IPD') {
                   isActive = activeTab === 'IPD' && (!item.subView || ipdSubView === item.subView);
                 } else {
