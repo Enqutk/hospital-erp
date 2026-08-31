@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import {
   UserAccount,
   UserRole,
@@ -329,9 +329,17 @@ export const HospitalProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
   }, []);
 
+  const isInitialMountRef = useRef(false);
+
+
   // Auto-sync all changes to persistent local file cache
   useEffect(() => {
     if (!isHydrated) return;
+
+    if (!isInitialMountRef.current) {
+      isInitialMountRef.current = true;
+      return;
+    }
 
     saveHospitalCache({
       patients,

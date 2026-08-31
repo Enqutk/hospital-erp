@@ -2158,6 +2158,24 @@
   ],
   "auditLogs": [
     {
+      "userName": "Sister Selamawit Bekele",
+      "userRole": "RECEPTIONIST",
+      "module": "Security & Auth",
+      "action": "Quick Role Activation",
+      "details": "Active role profile switched to Chief Admissions Officer",
+      "id": "LOG-1508",
+      "timestamp": "2026-08-31 14:36:01"
+    },
+    {
+      "userName": "Ephrem Tesfaye, MHA",
+      "userRole": "ADMIN_HR",
+      "module": "Security & Auth",
+      "action": "Staff Sign-Out",
+      "details": "User USR-09 logged out from terminal.",
+      "id": "LOG-9219",
+      "timestamp": "2026-08-31 14:35:59"
+    },
+    {
       "userName": "Ephrem Tesfaye, MHA",
       "userRole": "ADMIN_HR",
       "module": "Security & Auth",
