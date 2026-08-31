@@ -2158,6 +2158,15 @@
   ],
   "auditLogs": [
     {
+      "userName": "Sister Selamawit Bekele",
+      "userRole": "RECEPTIONIST",
+      "module": "Security & Auth",
+      "action": "Staff Sign-Out",
+      "details": "User USR-01 logged out from terminal.",
+      "id": "LOG-1971",
+      "timestamp": "2026-08-31 15:02:51"
+    },
+    {
       "userName": "Nurse Rahel Tadesse, BSN",
       "userRole": "IPD_NURSE",
       "module": "Security & Auth",

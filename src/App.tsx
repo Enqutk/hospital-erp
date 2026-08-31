@@ -137,8 +137,8 @@ const MainAppContent: React.FC = () => {
           onOpenMobileSidebar={() => setMobileSidebarOpen(true)}
         />
 
-        {/* Patient Clinical Banner (shown in clinical/financial patient workflows, excluding Admin/Dashboard/HR) */}
-        {activeTab !== 'ADMIN' && activeTab !== 'HR' && activeTab !== 'DASHBOARD' && (
+        {/* Patient Clinical Context Banner (exclusively shown in clinical workstation modules) */}
+        {['OPD', 'IPD', 'EMERGENCY', 'LAB_BLOOD', 'PHARMACY', 'BILLING'].includes(activeTab) && (
           <PatientClinicalBanner onOpenPatientCard={handleOpenPatientCard} />
         )}
 
