@@ -204,6 +204,9 @@ interface HospitalContextType {
   // Emergency Department (ER) Sub-View Navigation
   emergencySubView: string;
   setEmergencySubView: (subView: string) => void;
+  // Cashier & POS Sub-View Navigation
+  cashierSubView: string;
+  setCashierSubView: (subView: string) => void;
   // Inpatient Department (IPD) Sub-View Navigation
   ipdSubView: string;
   setIpdSubView: (subView: string) => void;
