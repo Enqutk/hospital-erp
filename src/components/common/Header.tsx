@@ -4,7 +4,8 @@ import {
   Search,
   Plus,
   Lock,
-  LogOut
+  LogOut,
+  HardDrive
 } from 'lucide-react';
 import { useHospital } from '../../context/HospitalContext';
 import { StaffProfileModal } from '../auth/StaffProfileModal';
@@ -27,8 +28,11 @@ export const Header: React.FC<HeaderProps> = ({
     logout,
     patients = [],
     selectedPatientMrn,
-    setSelectedPatientMrn
+    setSelectedPatientMrn,
+    setOpenStorageModal,
+    isCacheSyncing
   } = useHospital();
+
 
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [patientSearchQuery, setPatientSearchQuery] = useState('');
@@ -167,6 +171,19 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Right: Actions & User Session */}
           <div className="flex items-center space-x-2">
+            {/* Storage & Local Cache Indicator Button */}
+            <button
+              onClick={() => setOpenStorageModal(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 hover:border-emerald-300 text-slate-700 text-xs font-semibold transition-all cursor-pointer shadow-2xs"
+              title="Inspect Local File Cache & Storage Persistence"
+            >
+              <HardDrive className={`w-3.5 h-3.5 text-emerald-600 ${isCacheSyncing ? 'animate-pulse' : ''}`} />
+              <span className="hidden lg:inline text-[11px] text-slate-700">
+                {isCacheSyncing ? 'Syncing...' : 'File Cache'}
+              </span>
+              <span className={`w-1.5 h-1.5 rounded-full ${isCacheSyncing ? 'bg-amber-500 animate-ping' : 'bg-emerald-500'}`}></span>
+            </button>
+
             {onOpenNewPatientModal && (
               <button
                 onClick={onOpenNewPatientModal}

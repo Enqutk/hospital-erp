@@ -53,6 +53,17 @@ import {
   INITIAL_SURGICAL_PROCEDURES,
   INITIAL_AUDIT_LOGS
 } from '../data/mockData';
+import {
+  initPersistentStorage,
+  loadHospitalCache,
+  saveHospitalCache,
+  exportCacheToFile,
+  importCacheFromFile,
+  resetDiskCache,
+  subscribeStorageStatus,
+  StorageDiagnostics
+} from '../utils/persistentStorage';
+import { StorageCacheModal } from '../components/modals/StorageCacheModal';
 
 interface ToastNotification {
   id: string;
@@ -62,6 +73,7 @@ interface ToastNotification {
 }
 
 interface HospitalContextType {
+
   activeTab: string;
   setActiveTab: (tab: string) => void;
 
@@ -178,6 +190,17 @@ interface HospitalContextType {
   removeToast: (id: string) => void;
   selectedPatientMrn: string | null;
   setSelectedPatientMrn: (mrn: string | null) => void;
+
+  // Local File Cache & Storage Persistence
+  storageDiagnostics: StorageDiagnostics | null;
+  isCacheSyncing: boolean;
+  lastSyncedAt: string | null;
+  openStorageModal: boolean;
+  setOpenStorageModal: (open: boolean) => void;
+  forceSyncDiskCache: () => Promise<void>;
+  exportCache: () => void;
+  importCache: (file: File) => Promise<void>;
+  resetAllData: () => Promise<void>;
 }
 
 const HospitalContext = createContext<HospitalContextType | undefined>(undefined);
@@ -224,6 +247,140 @@ export const HospitalProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
   const [selectedPatientMrn, setSelectedPatientMrn] = useState<string | null>('FPH-2025-0101');
+
+  // Permanent Storage Engine State
+  const [openStorageModal, setOpenStorageModal] = useState<boolean>(false);
+  const [isHydrated, setIsHydrated] = useState<boolean>(false);
+  const [storageDiagnostics, setStorageDiagnostics] = useState<StorageDiagnostics | null>(null);
+  const [isCacheSyncing, setIsCacheSyncing] = useState<boolean>(false);
+  const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
+
+  // Initialize storage & hydrate from disk cache / IndexedDB on mount
+  useEffect(() => {
+    let unsubscribe: (() => void) | null = null;
+
+    const bootstrap = async () => {
+      await initPersistentStorage();
+
+      unsubscribe = subscribeStorageStatus((status, diag) => {
+        setIsCacheSyncing(status === 'syncing');
+        setLastSyncedAt(diag.lastSyncedTimestamp);
+        setStorageDiagnostics(diag);
+      });
+
+      const loaded = await loadHospitalCache();
+      if (loaded.data) {
+        const d = loaded.data;
+        if (Array.isArray(d.patients) && d.patients.length > 0) setPatients(d.patients);
+        if (Array.isArray(d.opdEncounters)) setOpdEncounters(d.opdEncounters);
+        if (Array.isArray(d.opdQueue)) setOpdQueue(d.opdQueue);
+        if (Array.isArray(d.beds)) setBeds(d.beds);
+        if (Array.isArray(d.ipdAdmissions)) setIpdAdmissions(d.ipdAdmissions);
+        if (Array.isArray(d.admissionOrders)) setAdmissionOrders(d.admissionOrders);
+        if (Array.isArray(d.emergencyRecords)) setEmergencyRecords(d.emergencyRecords);
+        if (Array.isArray(d.labOrders)) setLabOrders(d.labOrders);
+        if (Array.isArray(d.bloodUnits)) setBloodUnits(d.bloodUnits);
+        if (Array.isArray(d.bloodDonors)) setBloodDonors(d.bloodDonors);
+        if (Array.isArray(d.crossmatchRecords)) setCrossmatchRecords(d.crossmatchRecords);
+        if (Array.isArray(d.radiologyOrders)) setRadiologyOrders(d.radiologyOrders);
+        if (Array.isArray(d.drugInventory)) setDrugInventory(d.drugInventory);
+        if (Array.isArray(d.prescriptions)) setPrescriptions(d.prescriptions);
+        if (Array.isArray(d.bills)) setBills(d.bills);
+        if (Array.isArray(d.transactions)) setTransactions(d.transactions);
+        if (d.tillSession) setTillSession(d.tillSession);
+        if (Array.isArray(d.staffList)) setStaffList(d.staffList);
+        if (Array.isArray(d.leaveRequests)) setLeaveRequests(d.leaveRequests);
+        if (Array.isArray(d.surgicalProcedures)) setSurgicalProcedures(d.surgicalProcedures);
+        if (Array.isArray(d.auditLogs)) setAuditLogs(d.auditLogs);
+      } else {
+        // Initial sync of default dataset to disk
+        saveHospitalCache({
+          patients: INITIAL_PATIENTS,
+          opdEncounters: INITIAL_OPD_ENCOUNTERS,
+          opdQueue: INITIAL_OPD_QUEUE,
+          beds: INITIAL_BEDS,
+          ipdAdmissions: INITIAL_IPD_ADMISSIONS,
+          admissionOrders: INITIAL_ADMISSION_ORDERS,
+          emergencyRecords: INITIAL_EMERGENCY_RECORDS,
+          labOrders: INITIAL_LAB_ORDERS,
+          bloodUnits: INITIAL_BLOOD_UNITS,
+          bloodDonors: INITIAL_BLOOD_DONORS,
+          crossmatchRecords: INITIAL_CROSSMATCH_RECORDS,
+          radiologyOrders: INITIAL_RADIOLOGY_ORDERS,
+          drugInventory: INITIAL_DRUG_INVENTORY,
+          prescriptions: INITIAL_PRESCRIPTIONS,
+          bills: INITIAL_BILLS,
+          transactions: INITIAL_TRANSACTIONS,
+          tillSession: INITIAL_TILL_SESSION,
+          staffList: INITIAL_STAFF,
+          leaveRequests: INITIAL_LEAVE_REQUESTS,
+          surgicalProcedures: INITIAL_SURGICAL_PROCEDURES,
+          auditLogs: INITIAL_AUDIT_LOGS
+        }, true);
+      }
+
+      setIsHydrated(true);
+    };
+
+    bootstrap();
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, []);
+
+  // Auto-sync all changes to persistent local file cache
+  useEffect(() => {
+    if (!isHydrated) return;
+
+    saveHospitalCache({
+      patients,
+      opdEncounters,
+      opdQueue,
+      beds,
+      ipdAdmissions,
+      admissionOrders,
+      emergencyRecords,
+      labOrders,
+      bloodUnits,
+      bloodDonors,
+      crossmatchRecords,
+      radiologyOrders,
+      drugInventory,
+      prescriptions,
+      bills,
+      transactions,
+      tillSession,
+      staffList,
+      leaveRequests,
+      surgicalProcedures,
+      auditLogs
+    });
+  }, [
+    isHydrated,
+    patients,
+    opdEncounters,
+    opdQueue,
+    beds,
+    ipdAdmissions,
+    admissionOrders,
+    emergencyRecords,
+    labOrders,
+    bloodUnits,
+    bloodDonors,
+    crossmatchRecords,
+    radiologyOrders,
+    drugInventory,
+    prescriptions,
+    bills,
+    transactions,
+    tillSession,
+    staffList,
+    leaveRequests,
+    surgicalProcedures,
+    auditLogs
+  ]);
+
 
   const addToast = (type: ToastNotification['type'], title: string, message: string) => {
     const id = Math.random().toString(36).substring(2, 9);
@@ -1338,6 +1495,111 @@ export const HospitalProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     addToast('info', 'Surgery Status Updated', `Procedure marked as ${status}`);
   };
 
+  const forceSyncDiskCache = async () => {
+    await saveHospitalCache({
+      patients,
+      opdEncounters,
+      opdQueue,
+      beds,
+      ipdAdmissions,
+      admissionOrders,
+      emergencyRecords,
+      labOrders,
+      bloodUnits,
+      bloodDonors,
+      crossmatchRecords,
+      radiologyOrders,
+      drugInventory,
+      prescriptions,
+      bills,
+      transactions,
+      tillSession,
+      staffList,
+      leaveRequests,
+      surgicalProcedures,
+      auditLogs
+    }, true);
+  };
+
+  const exportCache = () => {
+    exportCacheToFile({
+      patients,
+      opdEncounters,
+      opdQueue,
+      beds,
+      ipdAdmissions,
+      admissionOrders,
+      emergencyRecords,
+      labOrders,
+      bloodUnits,
+      bloodDonors,
+      crossmatchRecords,
+      radiologyOrders,
+      drugInventory,
+      prescriptions,
+      bills,
+      transactions,
+      tillSession,
+      staffList,
+      leaveRequests,
+      surgicalProcedures,
+      auditLogs
+    });
+    addToast('success', 'Cache Exported', 'Local JSON snapshot downloaded successfully.');
+  };
+
+  const importCache = async (file: File) => {
+    const data = await importCacheFromFile(file);
+    if (data.patients) setPatients(data.patients);
+    if (data.opdEncounters) setOpdEncounters(data.opdEncounters);
+    if (data.opdQueue) setOpdQueue(data.opdQueue);
+    if (data.beds) setBeds(data.beds);
+    if (data.ipdAdmissions) setIpdAdmissions(data.ipdAdmissions);
+    if (data.admissionOrders) setAdmissionOrders(data.admissionOrders);
+    if (data.emergencyRecords) setEmergencyRecords(data.emergencyRecords);
+    if (data.labOrders) setLabOrders(data.labOrders);
+    if (data.bloodUnits) setBloodUnits(data.bloodUnits);
+    if (data.bloodDonors) setBloodDonors(data.bloodDonors);
+    if (data.crossmatchRecords) setCrossmatchRecords(data.crossmatchRecords);
+    if (data.radiologyOrders) setRadiologyOrders(data.radiologyOrders);
+    if (data.drugInventory) setDrugInventory(data.drugInventory);
+    if (data.prescriptions) setPrescriptions(data.prescriptions);
+    if (data.bills) setBills(data.bills);
+    if (data.transactions) setTransactions(data.transactions);
+    if (data.tillSession) setTillSession(data.tillSession);
+    if (data.staffList) setStaffList(data.staffList);
+    if (data.leaveRequests) setLeaveRequests(data.leaveRequests);
+    if (data.surgicalProcedures) setSurgicalProcedures(data.surgicalProcedures);
+    if (data.auditLogs) setAuditLogs(data.auditLogs);
+    addToast('success', 'Cache Restored', 'Successfully restored database from file.');
+  };
+
+  const resetAllData = async () => {
+    await resetDiskCache();
+    setPatients(INITIAL_PATIENTS);
+    setOpdEncounters(INITIAL_OPD_ENCOUNTERS);
+    setOpdQueue(INITIAL_OPD_QUEUE);
+    setBeds(INITIAL_BEDS);
+    setIpdAdmissions(INITIAL_IPD_ADMISSIONS);
+    setAdmissionOrders(INITIAL_ADMISSION_ORDERS);
+    setEmergencyRecords(INITIAL_EMERGENCY_RECORDS);
+    setLabOrders(INITIAL_LAB_ORDERS);
+    setBloodUnits(INITIAL_BLOOD_UNITS);
+    setBloodDonors(INITIAL_BLOOD_DONORS);
+    setCrossmatchRecords(INITIAL_CROSSMATCH_RECORDS);
+    setRadiologyOrders(INITIAL_RADIOLOGY_ORDERS);
+    setDrugInventory(INITIAL_DRUG_INVENTORY);
+    setPrescriptions(INITIAL_PRESCRIPTIONS);
+    setBills(INITIAL_BILLS);
+    setTransactions(INITIAL_TRANSACTIONS);
+    setTillSession(INITIAL_TILL_SESSION);
+    setStaffList(INITIAL_STAFF);
+    setLeaveRequests(INITIAL_LEAVE_REQUESTS);
+    setSurgicalProcedures(INITIAL_SURGICAL_PROCEDURES);
+    setAuditLogs(INITIAL_AUDIT_LOGS);
+    addToast('info', 'Factory Reset', 'Database and local cache reset to default records.');
+  };
+
   return (
     <HospitalContext.Provider
       value={{
@@ -1441,10 +1703,21 @@ export const HospitalProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         addToast,
         removeToast,
         selectedPatientMrn,
-        setSelectedPatientMrn
+        setSelectedPatientMrn,
+
+        storageDiagnostics,
+        isCacheSyncing,
+        lastSyncedAt,
+        openStorageModal,
+        setOpenStorageModal,
+        forceSyncDiskCache,
+        exportCache,
+        importCache,
+        resetAllData
       }}
     >
       {children}
+      <StorageCacheModal isOpen={openStorageModal} onClose={() => setOpenStorageModal(false)} />
     </HospitalContext.Provider>
   );
 };
