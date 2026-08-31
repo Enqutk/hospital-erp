@@ -781,130 +781,147 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }
   };
 
-  const sidebarContent = (
-    <div className="h-full flex flex-col justify-between bg-white text-slate-700 select-none">
-      {/* Top Hospital Identity */}
-      <div>
-        <div className="h-14 px-3.5 border-b border-slate-200 flex items-center justify-between">
-          <div className="flex items-center space-x-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white font-bold shrink-0 shadow-xs">
-              <Activity className="w-4.5 h-4.5" />
-            </div>
-            {isOpen && (
-              <div className="min-w-0">
-                <div className="font-bold text-sm text-slate-900 leading-tight truncate">
-                  VitalSync<span className="text-emerald-600">ERP</span>
-                </div>
-                <div className="text-[10px] text-slate-400 truncate">
-                  Faya Primary Hospital
-                </div>
+  const renderSidebarContent = (isMobileVersion: boolean = false) => {
+    const showText = isMobileVersion || isOpen;
+
+    return (
+      <div className="h-full flex flex-col justify-between bg-white text-slate-700 select-none">
+        {/* Top Hospital Identity */}
+        <div>
+          <div className="h-14 px-3.5 border-b border-slate-200 flex items-center justify-between">
+            <div className="flex items-center space-x-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white font-bold shrink-0 shadow-xs">
+                <Activity className="w-4.5 h-4.5" />
               </div>
+              {showText && (
+                <div className="min-w-0">
+                  <div className="font-bold text-sm text-slate-900 leading-tight truncate">
+                    VitalSync<span className="text-emerald-600">ERP</span>
+                  </div>
+                  <div className="text-[10px] text-slate-400 truncate">
+                    Faya Primary Hospital
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Desktop Toggle Button */}
+            {!isMobileVersion && (
+              <button
+                onClick={handleToggle}
+                className="hidden md:flex p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                title={isOpen ? 'Collapse Sidebar' : 'Expand Sidebar'}
+              >
+                {isOpen ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+              </button>
+            )}
+
+            {/* Mobile Close Button */}
+            {isMobileVersion && (
+              <button
+                onClick={onCloseMobile}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                title="Close Navigation"
+              >
+                <X className="w-5 h-5" />
+              </button>
             )}
           </div>
 
-          {/* Desktop Toggle Button */}
-          <button
-            onClick={handleToggle}
-            className="hidden md:flex p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
-            title={isOpen ? 'Collapse Sidebar' : 'Expand Sidebar'}
-          >
-            {isOpen ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-          </button>
-        </div>
+          {/* Navigation Groups */}
+          <div className="p-2 space-y-3 overflow-y-auto max-h-[calc(100vh-140px)] no-scrollbar">
+            {navigationSections.map((section) => (
+              <div key={section.group} className="space-y-0.5">
+                {showText && (
+                  <div className="px-2.5 pt-1.5 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    {section.group}
+                  </div>
+                )}
+                {section.items.map((item: any) => {
+                  let isActive = false;
+                  if (item.id === 'RECEPTION') {
+                    isActive = activeTab === 'RECEPTION' && (!item.subView || receptionSubView === item.subView);
+                  } else if (item.id === 'LAB_BLOOD') {
+                    isActive = activeTab === 'LAB_BLOOD' && (!item.subView || labSubView === item.subView);
+                  } else if (item.id === 'PHARMACY') {
+                    isActive = activeTab === 'PHARMACY' && (!item.subView || pharmacySubView === item.subView);
+                  } else if (item.id === 'EMERGENCY') {
+                    isActive = activeTab === 'EMERGENCY' && (!item.subView || emergencySubView === item.subView);
+                  } else if (item.id === 'CASHIER') {
+                    isActive = activeTab === 'CASHIER' && (!item.subView || cashierSubView === item.subView);
+                  } else if (item.id === 'OT') {
+                    isActive = activeTab === 'OT' && (!item.subView || otSubView === item.subView);
+                  } else if (item.id === 'IPD') {
+                    isActive = activeTab === 'IPD' && (!item.subView || ipdSubView === item.subView);
+                  } else {
+                    isActive = activeTab === item.id;
+                  }
 
-        {/* Navigation Groups */}
-        <div className="p-2 space-y-3 overflow-y-auto max-h-[calc(100vh-140px)] no-scrollbar">
-          {navigationSections.map((section) => (
-            <div key={section.group} className="space-y-0.5">
-              {isOpen && (
-                <div className="px-2.5 pt-1.5 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  {section.group}
-                </div>
-              )}
-              {section.items.map((item: any) => {
-                let isActive = false;
-                if (item.id === 'RECEPTION') {
-                  isActive = activeTab === 'RECEPTION' && (!item.subView || receptionSubView === item.subView);
-                } else if (item.id === 'LAB_BLOOD') {
-                  isActive = activeTab === 'LAB_BLOOD' && (!item.subView || labSubView === item.subView);
-                } else if (item.id === 'PHARMACY') {
-                  isActive = activeTab === 'PHARMACY' && (!item.subView || pharmacySubView === item.subView);
-                } else if (item.id === 'EMERGENCY') {
-                  isActive = activeTab === 'EMERGENCY' && (!item.subView || emergencySubView === item.subView);
-                } else if (item.id === 'CASHIER') {
-                  isActive = activeTab === 'CASHIER' && (!item.subView || cashierSubView === item.subView);
-                } else if (item.id === 'OT') {
-                  isActive = activeTab === 'OT' && (!item.subView || otSubView === item.subView);
-                } else if (item.id === 'IPD') {
-                  isActive = activeTab === 'IPD' && (!item.subView || ipdSubView === item.subView);
-                } else {
-                  isActive = activeTab === item.id;
-                }
+                  const isUserStation = currentUser.role === (item.role || 'RECEPTIONIST');
+                  const IconComponent = item.icon;
 
-                const isUserStation = currentUser.role === (item.role || 'RECEPTIONIST');
-                const IconComponent = item.icon;
+                  return (
+                    <button
+                      key={`${item.id}-${item.subView || ''}-${item.label}`}
+                      onClick={() => handleSelectModule(item)}
+                      title={!showText ? item.label : undefined}
+                      className={`w-full text-left rounded-xl transition-all flex items-center cursor-pointer ${
+                        showText ? 'px-2.5 py-2' : 'p-2.5 justify-center'
+                      } ${
+                        isActive
+                          ? 'bg-slate-900 text-white font-semibold shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-medium'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                        <IconComponent
+                          className={`w-4 h-4 shrink-0 ${
+                            isActive
+                              ? 'text-emerald-400'
+                              : isUserStation
+                              ? 'text-emerald-600'
+                              : 'text-slate-500'
+                          }`}
+                        />
 
-                return (
-                  <button
-                    key={`${item.id}-${item.subView || ''}-${item.label}`}
-                    onClick={() => handleSelectModule(item)}
-                    title={!isOpen ? item.label : undefined}
-                    className={`w-full text-left rounded-xl transition-all flex items-center cursor-pointer ${
-                      isOpen ? 'px-2.5 py-2' : 'p-2.5 justify-center'
-                    } ${
-                      isActive
-                        ? 'bg-slate-900 text-white font-semibold shadow-xs'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-medium'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                      <IconComponent
-                        className={`w-4 h-4 shrink-0 ${
-                          isActive
-                            ? 'text-emerald-400'
-                            : isUserStation
-                            ? 'text-emerald-600'
-                            : 'text-slate-500'
-                        }`}
-                      />
+                        {showText && (
+                          <span className="text-xs truncate">
+                            {item.label}
+                          </span>
+                        )}
+                      </div>
 
-                      {isOpen && (
-                        <span className="text-xs truncate">
-                          {item.label}
+                      {showText && item.badge && (
+                        <span
+                          className={`text-[10px] font-bold px-1.5 py-0.2 rounded-md shrink-0 ml-1.5 ${
+                            isActive
+                              ? 'bg-slate-800 text-emerald-300'
+                              : item.isAlert
+                              ? 'bg-rose-100 text-rose-700 font-bold'
+                              : 'bg-slate-100 text-slate-600'
+                          }`}
+                        >
+                          {item.badge}
                         </span>
                       )}
-                    </div>
-
-                    {isOpen && item.badge && (
-                      <span
-                        className={`text-[10px] font-bold px-1.5 py-0.2 rounded-md shrink-0 ml-1.5 ${
-                          isActive
-                            ? 'bg-slate-800 text-emerald-300'
-                            : item.isAlert
-                            ? 'bg-rose-100 text-rose-700 font-bold'
-                            : 'bg-slate-100 text-slate-600'
-                        }`}
-                      >
-                        {item.badge}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          ))}
+                    </button>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
         </div>
+
+        {/* Bottom Footer */}
+        {showText && (
+          <div className="p-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between text-[11px] text-slate-500">
+            <span className="font-semibold text-slate-700">HMIS System v2.4</span>
+            <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded font-bold">Online</span>
+          </div>
+        )}
       </div>
-
-      {/* Bottom Footer */}
-      {isOpen && (
-        <div className="p-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between text-[11px] text-slate-500">
-          <span className="font-semibold text-slate-700">HMIS System v2.4</span>
-          <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded font-bold">Online</span>
-        </div>
-      )}
-    </div>
-  );
+    );
+  };
 
   return (
     <>
@@ -914,18 +931,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
           isOpen ? 'w-60' : 'w-16'
         }`}
       >
-        {sidebarContent}
+        {renderSidebarContent(false)}
       </aside>
 
       {/* Mobile Drawer Overlay */}
       {isMobileOpen && (
         <div className="md:hidden fixed inset-0 z-50 flex">
           <div
-            className="fixed inset-0 bg-slate-950/50 backdrop-blur-xs transition-opacity"
+            className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity"
             onClick={onCloseMobile}
           />
-          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white shadow-xl z-10 animate-in slide-in-from-left duration-200">
-            {sidebarContent}
+          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white shadow-2xl z-10 animate-in slide-in-from-left duration-200">
+            {renderSidebarContent(true)}
           </div>
         </div>
       )}

@@ -729,13 +729,13 @@ export const OPDModule: React.FC<OPDModuleProps> = ({ onOpenRxPrint }) => {
         <div className="lg:col-span-8 bg-white border border-slate-200 rounded-xl p-4 sm:p-5 shadow-xs space-y-4">
           
           {/* Top 5-Step Stepper Bar */}
-          <div className="grid grid-cols-5 gap-1.5 bg-slate-50 p-1.5 rounded-xl border border-slate-200 text-[11px]">
+          <div className="flex items-center gap-1 bg-slate-50 p-1.5 rounded-xl border border-slate-200 text-[11px] overflow-x-auto no-scrollbar">
             {stepsList.map((st) => (
               <button
                 key={st.num}
                 type="button"
                 onClick={() => setCurrentStep(st.num as OPDStep)}
-                className={`py-2 px-1 rounded-lg font-bold transition-all text-center cursor-pointer truncate ${
+                className={`py-2 px-2.5 rounded-lg font-bold transition-all text-center cursor-pointer whitespace-nowrap shrink-0 sm:shrink sm:flex-1 ${
                   currentStep === st.num
                     ? 'bg-slate-900 text-white shadow-xs'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'

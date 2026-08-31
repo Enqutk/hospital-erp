@@ -39,6 +39,7 @@ export const Header: React.FC<HeaderProps> = ({
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [patientSearchQuery, setPatientSearchQuery] = useState('');
   const [searchDropdownOpen, setSearchDropdownOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   const filteredPatients = (patients || []).filter((p) => {
     const q = patientSearchQuery.toLowerCase();
@@ -177,10 +178,19 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Right: Actions & User Session */}
           <div className="flex items-center space-x-2">
             
+            {/* Mobile Search Trigger Button */}
+            <button
+              onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
+              className="md:hidden p-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 transition-colors cursor-pointer"
+              title="Search Patients"
+            >
+              <Search className="w-4 h-4" />
+            </button>
+
             {/* Storage & Local Cache Indicator Button */}
             <button
               onClick={() => setOpenStorageModal(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 hover:border-emerald-300 text-slate-700 text-xs font-semibold transition-all cursor-pointer shadow-2xs"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 hover:border-emerald-300 text-slate-700 text-xs font-semibold transition-all cursor-pointer shadow-2xs"
               title="Inspect Local File Cache & Storage Persistence"
             >
               <HardDrive className={`w-3.5 h-3.5 text-emerald-600 ${isCacheSyncing ? 'animate-pulse' : ''}`} />
@@ -193,7 +203,7 @@ export const Header: React.FC<HeaderProps> = ({
             {onOpenNewPatientModal && (
               <button
                 onClick={onOpenNewPatientModal}
-                className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-xl text-xs font-semibold shadow-xs transition-all cursor-pointer"
+                className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-semibold shadow-xs transition-all cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Register Patient</span>
@@ -202,7 +212,7 @@ export const Header: React.FC<HeaderProps> = ({
             )}
 
             {/* Authenticated Staff User */}
-            <div className="flex items-center border-l border-slate-200 pl-2 gap-1">
+            <div className="flex items-center border-l border-slate-200 pl-1.5 sm:pl-2 gap-0.5 sm:gap-1">
               <button
                 onClick={() => setProfileModalOpen(true)}
                 className="flex items-center gap-2 p-1 hover:bg-slate-100/80 rounded-xl text-left transition-colors cursor-pointer"
@@ -242,6 +252,86 @@ export const Header: React.FC<HeaderProps> = ({
 
           </div>
         </div>
+
+        {/* Mobile Search Row (Revealed when mobileSearchOpen is true) */}
+        {mobileSearchOpen && (
+          <div className="mt-2.5 pt-2 border-t border-slate-100 md:hidden relative animate-in fade-in slide-in-from-top-2 duration-150">
+            <div className="relative">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={patientSearchQuery}
+                onChange={(e) => {
+                  setPatientSearchQuery(e.target.value);
+                  setSearchDropdownOpen(true);
+                }}
+                onFocus={() => setSearchDropdownOpen(true)}
+                placeholder="Search patient by MRN, Name, Phone..."
+                className="w-full pl-9 pr-12 py-2 text-xs bg-slate-50 border border-slate-200 focus:border-emerald-600 rounded-xl outline-hidden text-slate-900 placeholder:text-slate-400"
+                autoFocus
+              />
+              {patientSearchQuery && (
+                <button
+                  onClick={() => {
+                    setPatientSearchQuery('');
+                    setSearchDropdownOpen(false);
+                  }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-medium text-slate-400 hover:text-slate-700 cursor-pointer"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+
+            {/* Mobile Dropdown Results */}
+            {searchDropdownOpen && patientSearchQuery.trim() && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-2xl shadow-xl border border-slate-200 py-1.5 z-50 max-h-64 overflow-y-auto">
+                <div className="px-3.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  Patients ({filteredPatients.length})
+                </div>
+                {filteredPatients.length === 0 ? (
+                  <div className="px-4 py-3 text-xs text-slate-500 text-center">
+                    No matching records found.
+                  </div>
+                ) : (
+                  filteredPatients.map((p) => (
+                    <button
+                      key={p.mrn}
+                      onClick={() => {
+                        setSelectedPatientMrn(p.mrn);
+                        setSearchDropdownOpen(false);
+                        setPatientSearchQuery('');
+                        setMobileSearchOpen(false);
+                      }}
+                      className={`w-full px-3.5 py-2 text-left text-xs hover:bg-slate-50 flex items-center justify-between transition-colors cursor-pointer ${
+                        selectedPatientMrn === p.mrn ? 'bg-emerald-50/80 text-emerald-950 font-semibold' : ''
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <img
+                          src={p.photoUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100'}
+                          alt={p.firstName}
+                          className="w-7 h-7 rounded-lg object-cover border border-slate-200"
+                        />
+                        <div>
+                          <div className="font-bold text-slate-900 text-xs">
+                            {p.firstName} {p.middleName} {p.lastName}
+                          </div>
+                          <div className="text-slate-500 text-[10px] font-mono">
+                            {p.mrn} • {p.gender}, {p.dob}
+                          </div>
+                        </div>
+                      </div>
+                      <span className="text-[10px] bg-slate-100 font-medium text-slate-700 px-2 py-0.5 rounded-md">
+                        {p.activeStation || 'Reception'}
+                      </span>
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Staff Profile Modal */}
