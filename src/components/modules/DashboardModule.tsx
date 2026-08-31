@@ -38,6 +38,12 @@ import {
   Legend
 } from 'recharts';
 import { useHospital } from '../../context/HospitalContext';
+import { ReceptionAnalyticsView } from '../reception/ReceptionAnalyticsView';
+import { LabAnalyticsView } from '../lab/LabAnalyticsView';
+import { IPDAnalyticsView } from '../ipd/IPDAnalyticsView';
+import { PharmacyAnalyticsView } from '../pharmacy/PharmacyAnalyticsView';
+import { DoctorAnalyticsView } from '../opd/DoctorAnalyticsView';
+import { EmergencyAnalyticsView } from '../emergency/EmergencyAnalyticsView';
 
 const PALETTE = {
   emerald: '#059669',
@@ -77,7 +83,7 @@ const CustomChartTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-export const DashboardModule: React.FC = () => {
+const ExecutiveHospitalDashboardView: React.FC = () => {
   const {
     currentUser,
     setActiveTab,
@@ -97,6 +103,8 @@ export const DashboardModule: React.FC = () => {
     surgicalProcedures = [],
     auditLogs = []
   } = useHospital();
+
+  const [adminAnalyticsTab, setAdminAnalyticsTab] = React.useState<'EXECUTIVE' | 'RECEPTION' | 'OPD' | 'EMERGENCY' | 'LAB' | 'PHARMACY' | 'IPD'>('EXECUTIVE');
 
   // Metrics calculations
   const totalPatients = patients.length;
@@ -315,7 +323,110 @@ export const DashboardModule: React.FC = () => {
         </div>
       </div>
 
-      {/* KPI Top Cards Grid */}
+      {/* Admin Analytics Station Switcher */}
+      {currentUser.role === 'ADMIN_HR' && (
+        <div className="flex items-center gap-1.5 bg-white p-1.5 rounded-xl border border-slate-200 shadow-xs text-xs">
+          <button
+            type="button"
+            onClick={() => setAdminAnalyticsTab('EXECUTIVE')}
+            className={`px-3.5 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+              adminAnalyticsTab === 'EXECUTIVE'
+                ? 'bg-slate-900 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            Executive Hospital Overview
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setAdminAnalyticsTab('RECEPTION')}
+            className={`px-3.5 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+              adminAnalyticsTab === 'RECEPTION'
+                ? 'bg-emerald-600 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            Front Desk & Registry Analytics
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setAdminAnalyticsTab('OPD')}
+            className={`px-3.5 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+              adminAnalyticsTab === 'OPD'
+                ? 'bg-indigo-700 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            Doctor OPD Clinical Analytics
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setAdminAnalyticsTab('EMERGENCY')}
+            className={`px-3.5 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+              adminAnalyticsTab === 'EMERGENCY'
+                ? 'bg-rose-700 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            Emergency & Triage Analytics
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setAdminAnalyticsTab('LAB')}
+            className={`px-3.5 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+              adminAnalyticsTab === 'LAB'
+                ? 'bg-teal-700 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            Laboratory & Blood Bank Analytics
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setAdminAnalyticsTab('PHARMACY')}
+            className={`px-3.5 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+              adminAnalyticsTab === 'PHARMACY'
+                ? 'bg-emerald-700 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            Dispensary & Stock Analytics
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setAdminAnalyticsTab('IPD')}
+            className={`px-3.5 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+              adminAnalyticsTab === 'IPD'
+                ? 'bg-purple-700 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            Inpatient Wards & Bed Analytics
+          </button>
+        </div>
+      )}
+
+      {adminAnalyticsTab === 'RECEPTION' ? (
+        <ReceptionAnalyticsView />
+      ) : adminAnalyticsTab === 'OPD' ? (
+        <DoctorAnalyticsView />
+      ) : adminAnalyticsTab === 'EMERGENCY' ? (
+        <EmergencyAnalyticsView />
+      ) : adminAnalyticsTab === 'LAB' ? (
+        <LabAnalyticsView />
+      ) : adminAnalyticsTab === 'PHARMACY' ? (
+        <PharmacyAnalyticsView />
+      ) : adminAnalyticsTab === 'IPD' ? (
+        <IPDAnalyticsView />
+      ) : (
+        <>
+          {/* KPI Top Cards Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1: OPD Status */}
         <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-xs hover:border-slate-300 transition-all">
@@ -627,6 +738,38 @@ export const DashboardModule: React.FC = () => {
           })}
         </div>
       </div>
+        </>
+      )}
     </div>
   );
+};
+
+export const DashboardModule: React.FC = () => {
+  const { currentUser } = useHospital();
+
+  if (currentUser.role === 'RECEPTIONIST') {
+    return <ReceptionAnalyticsView />;
+  }
+
+  if (currentUser.role === 'OPD_DOCTOR') {
+    return <DoctorAnalyticsView />;
+  }
+
+  if (currentUser.role === 'EMERGENCY_OFFICER') {
+    return <EmergencyAnalyticsView />;
+  }
+
+  if (currentUser.role === 'LAB_TECH') {
+    return <LabAnalyticsView />;
+  }
+
+  if (currentUser.role === 'PHARMACIST') {
+    return <PharmacyAnalyticsView />;
+  }
+
+  if (currentUser.role === 'IPD_NURSE') {
+    return <IPDAnalyticsView />;
+  }
+
+  return <ExecutiveHospitalDashboardView />;
 };

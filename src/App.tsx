@@ -59,6 +59,12 @@ const MainAppContent: React.FC = () => {
   useEffect(() => {
     if (!isAuthenticated) return;
 
+    // Super Admin has access to all tabs
+    if (currentUser.role === 'ADMIN_HR') return;
+
+    // All roles have access to their role-built Dashboard
+    if (activeTab === 'DASHBOARD') return;
+
     const roleToTabMap: Record<UserRole, string> = {
       RECEPTIONIST: 'RECEPTION',
       OPD_DOCTOR: 'OPD',
@@ -72,11 +78,9 @@ const MainAppContent: React.FC = () => {
       OT_COORDINATOR: 'OT'
     };
 
-    if (currentUser.role !== 'ADMIN_HR') {
-      const primaryTab = roleToTabMap[currentUser.role];
-      if (primaryTab && activeTab !== primaryTab) {
-        setActiveTab(primaryTab);
-      }
+    const primaryTab = roleToTabMap[currentUser.role];
+    if (primaryTab && activeTab !== primaryTab) {
+      setActiveTab('DASHBOARD');
     }
   }, [currentUser.role, isAuthenticated, activeTab, setActiveTab]);
 
@@ -137,8 +141,8 @@ const MainAppContent: React.FC = () => {
           onOpenMobileSidebar={() => setMobileSidebarOpen(true)}
         />
 
-        {/* Patient Clinical Banner (shown in clinical/financial patient workflows, excluding Admin/Dashboard/HR) */}
-        {activeTab !== 'ADMIN' && activeTab !== 'HR' && activeTab !== 'DASHBOARD' && (
+        {/* Patient Clinical Context Banner (exclusively shown in clinical workstation modules) */}
+        {['OPD', 'IPD', 'EMERGENCY', 'LAB_BLOOD', 'PHARMACY', 'BILLING'].includes(activeTab) && (
           <PatientClinicalBanner onOpenPatientCard={handleOpenPatientCard} />
         )}
 

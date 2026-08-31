@@ -24,7 +24,11 @@ import {
   Layers,
   ChevronRight,
   RotateCcw,
-  CheckCircle
+  CheckCircle,
+  X,
+  User,
+  ShieldCheck,
+  Sparkles
 } from 'lucide-react';
 import { useHospital } from '../../context/HospitalContext';
 import { ICD10_DATABASE, OPD_STATIONS, OPDStationInfo } from '../../data/mockData';
@@ -66,15 +70,15 @@ export const OPDModule: React.FC<OPDModuleProps> = ({ onOpenRxPrint }) => {
     createAdmissionOrder
   } = useHospital();
 
-  const [activeStation, setActiveStation] = useState<number>(currentUser.stationNumber || 1);
-  const [queueTab, setQueueTab] = useState<'CURRENT_ROOM' | 'ALL_ROOMS' | 'RESULTS_READY'>('CURRENT_ROOM');
+  const [activeStation, setActiveStation] = useState<number>(currentUser.stationNumber || 2);
+  const [queueTab, setQueueTab] = useState<'CURRENT_ROOM' | 'RESULTS_READY' | 'ALL_ROOMS'>('CURRENT_ROOM');
   const [currentStep, setCurrentStep] = useState<OPDStep>(1);
 
   const currentStationInfo: OPDStationInfo =
     OPD_STATIONS.find((s) => s.stationNumber === activeStation) || OPD_STATIONS[0];
 
   const patient = selectedPatientMrn ? getPatientByMrn(selectedPatientMrn) : patients[0];
-  const patientAge = patient ? calculateAge(patient.dob) : 25;
+  const patientAge = patient ? calculateAge(patient.dob) : 38;
 
   const currentRoomQueue = (opdQueue || []).filter((q) => q.assignedRoom === activeStation);
   const waitingInCurrentRoom = currentRoomQueue.filter((q) => q.status === 'Waiting');
@@ -448,993 +452,896 @@ export const OPDModule: React.FC<OPDModuleProps> = ({ onOpenRxPrint }) => {
             dosage: rxDosage,
             frequency: rxFrequency,
             durationDays: rxDuration,
-            quantity: 15,
-            unitPrice: matchedDrug.unitSalePrice,
+            quantity: rxDuration * (rxFrequency.includes('TID') ? 3 : rxFrequency.includes('BID') ? 2 : 1),
             dispensedStatus: 'Pending'
           }
-        ],
-        isSigned: true,
-        status: 'Prescribed'
+        ]
       });
-
-      createBillForPatient(patient.mrn, [
-        {
-          id: Math.random().toString(36).substring(2, 7),
-          description: `Rx: ${matchedDrug.genericName}`,
-          department: 'Pharmacy',
-          quantity: 1,
-          unitPrice: matchedDrug.unitSalePrice * 15,
-          total: matchedDrug.unitSalePrice * 15
-        }
-      ]);
     }
 
     setSubmittedEncounter(encounter);
   };
 
-  const patientEncounters = opdEncounters.filter((e) => e.mrn === selectedPatientMrn);
-  const patientLabOrders = labOrders.filter((l) => l.mrn === selectedPatientMrn);
-  const patientRadiologyOrders = radiologyOrders.filter((r) => r.mrn === selectedPatientMrn);
-  const patientPrescriptions = prescriptions.filter((p) => p.mrn === selectedPatientMrn);
-
   const stepsList = [
-    { number: 1, title: 'Patient Card & History', label: '1. Patient Card' },
-    { number: 2, title: 'Subjective Assessment', label: '2. Subjective' },
-    { number: 3, title: 'Objective & Vitals', label: '3. Objective' },
-    { number: 4, title: 'Diagnostic Workup', label: '4. Diagnostics' },
-    { number: 5, title: 'Assessment & Plan', label: '5. Assessment & Rx' }
+    { num: 1, label: '1. Patient Card' },
+    { num: 2, label: '2. Subjective' },
+    { num: 3, label: '3. Objective & Vitals' },
+    { num: 4, label: '4. Diagnostics' },
+    { num: 5, label: '5. Assessment & Rx' }
   ];
 
+  const priorEncounters = opdEncounters.filter((e) => e.mrn === patient?.mrn);
+  const patientLabResults = labOrders.filter((l) => l.mrn === patient?.mrn);
+  const patientRadReports = radiologyOrders.filter((r) => r.mrn === patient?.mrn);
+
   return (
-    <div className="space-y-4">
-      {/* ROOM SELECTION BAR */}
-      <div className="bg-white border border-slate-200 rounded-lg p-3">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+    <div className="space-y-4 text-xs">
+      
+      {/* Station Selector & Physician Header Bar */}
+      <div className="bg-white border border-slate-200 rounded-xl p-3 sm:p-4 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white font-bold shadow-xs shrink-0">
+            <Stethoscope className="w-5 h-5" />
+          </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-bold text-slate-900 text-sm">{currentStationInfo.name}</span>
-              <span className="text-xs text-slate-500">({currentStationInfo.doctorName} • {currentStationInfo.specialty})</span>
+              <h2 className="font-bold text-slate-900 text-sm sm:text-base">
+                {currentStationInfo.name}
+              </h2>
+              <span className="text-[11px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
+                Station {activeStation}
+              </span>
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">{currentStationInfo.clinicalScope}</p>
+            <p className="text-slate-500 text-xs mt-0.5">
+              Attending: <strong className="text-slate-800">{currentStationInfo.doctorName}</strong> • {currentStationInfo.description}
+            </p>
           </div>
+        </div>
 
-          <div className="flex flex-wrap items-center gap-1">
-            {OPD_STATIONS.map((stn) => {
-              const count = (opdQueue || []).filter(
-                (q) => q.assignedRoom === stn.stationNumber && q.status === 'Waiting'
-              ).length;
-              const readyCount = (opdQueue || []).filter(
-                (q) => q.assignedRoom === stn.stationNumber && q.status === 'Results Ready'
-              ).length;
-              const isSelected = activeStation === stn.stationNumber;
+        {/* Room Switcher Pills */}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {OPD_STATIONS.map((stn) => {
+            const isSelected = activeStation === stn.stationNumber;
+            const count = (opdQueue || []).filter(
+              (q) => q.assignedRoom === stn.stationNumber && q.status === 'Waiting'
+            ).length;
+            const readyCount = (opdQueue || []).filter(
+              (q) => q.assignedRoom === stn.stationNumber && q.status === 'Results Ready'
+            ).length;
 
-              return (
-                <button
-                  key={stn.stationNumber}
-                  type="button"
-                  onClick={() => setActiveStation(stn.stationNumber)}
-                  className={`px-2.5 py-1 text-xs rounded border transition-colors cursor-pointer ${
-                    isSelected
-                      ? 'bg-slate-900 text-white border-slate-900 font-semibold'
-                      : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
-                  }`}
-                >
-                  <span>Room {stn.stationNumber}</span>
-                  {readyCount > 0 && (
-                    <span className="ml-1 px-1 bg-emerald-600 text-white text-[10px] rounded font-bold">
-                      +{readyCount}
-                    </span>
-                  )}
-                  {count > 0 && readyCount === 0 && (
-                    <span className={`ml-1 px-1 text-[10px] rounded ${isSelected ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-700'}`}>
-                      {count}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
+            return (
+              <button
+                key={stn.stationNumber}
+                type="button"
+                onClick={() => setActiveStation(stn.stationNumber)}
+                className={`px-2.5 py-1 text-xs rounded-lg font-semibold transition-all cursor-pointer flex items-center gap-1 ${
+                  isSelected
+                    ? 'bg-slate-900 text-white shadow-xs'
+                    : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200'
+                }`}
+              >
+                <span>Room {stn.stationNumber}</span>
+                {readyCount > 0 && (
+                  <span className="px-1 bg-emerald-600 text-white text-[10px] rounded-full font-bold">
+                    +{readyCount}
+                  </span>
+                )}
+                {count > 0 && readyCount === 0 && (
+                  <span className={`px-1 text-[10px] rounded-full font-bold ${
+                    isSelected ? 'bg-slate-800 text-white' : 'bg-slate-200 text-slate-700'
+                  }`}>
+                    {count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* MAIN 2-COLUMN LAYOUT */}
+      {/* MAIN 2-COLUMN WORKSTATION LAYOUT */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-        {/* LEFT COLUMN: SIDE WAITING QUEUE */}
-        <div className="lg:col-span-4 space-y-3">
-          <div className="bg-white border border-slate-200 rounded-lg p-3">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-200 text-xs">
-              <span className="font-semibold text-slate-800">Room {activeStation} Queue</span>
-              <span className="text-slate-500">{waitingInCurrentRoom.length + resultsReadyInCurrentRoom.length} patients</span>
-            </div>
+        
+        {/* LEFT COLUMN: ROOM QUEUE PANEL (4 Cols) */}
+        <div className="lg:col-span-4 bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs space-y-3">
+          
+          {/* Header & Quick Call Next Button */}
+          <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+            <span className="font-bold text-slate-900 text-xs">
+              Room {activeStation} Waiting Queue
+            </span>
+            <span className="text-[11px] font-mono text-slate-500">
+              {waitingInCurrentRoom.length + resultsReadyInCurrentRoom.length} queued
+            </span>
+          </div>
 
-            <div className="mt-2">
-              <button
-                type="button"
-                onClick={handleCallNextPatient}
-                disabled={waitingInCurrentRoom.length === 0 && resultsReadyInCurrentRoom.length === 0}
-                className={`w-full py-2 text-xs font-semibold rounded border transition-colors cursor-pointer ${
-                  resultsReadyInCurrentRoom.length > 0
-                    ? 'bg-emerald-700 hover:bg-emerald-800 text-white border-emerald-700'
-                    : waitingInCurrentRoom.length > 0
-                    ? 'bg-slate-900 hover:bg-slate-800 text-white border-slate-900'
-                    : 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'
-                }`}
-              >
-                {resultsReadyInCurrentRoom.length > 0
-                  ? `Call Results Ready (${resultsReadyInCurrentRoom[0]?.tokenNumber})`
-                  : waitingInCurrentRoom.length > 0
-                  ? `Call Next Patient (${waitingInCurrentRoom[0]?.tokenNumber})`
-                  : 'No Patients Waiting'}
-              </button>
-            </div>
+          <button
+            type="button"
+            onClick={handleCallNextPatient}
+            disabled={waitingInCurrentRoom.length === 0 && resultsReadyInCurrentRoom.length === 0}
+            className={`w-full py-2 px-3 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs ${
+              resultsReadyInCurrentRoom.length > 0
+                ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                : waitingInCurrentRoom.length > 0
+                ? 'bg-slate-900 hover:bg-slate-800 text-white'
+                : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
+            }`}
+          >
+            <UserCheck className="w-3.5 h-3.5" />
+            <span>
+              {resultsReadyInCurrentRoom.length > 0
+                ? `Call Results Ready (${resultsReadyInCurrentRoom[0]?.tokenNumber})`
+                : waitingInCurrentRoom.length > 0
+                ? `Call Next Patient (${waitingInCurrentRoom[0]?.tokenNumber})`
+                : 'No Patients Waiting'}
+            </span>
+          </button>
 
-            {/* Queue Filters */}
-            <div className="mt-2 flex border border-slate-200 rounded text-xs bg-slate-50 p-0.5">
-              <button
-                type="button"
-                onClick={() => setQueueTab('CURRENT_ROOM')}
-                className={`flex-1 py-1 rounded text-center transition-colors cursor-pointer ${
-                  queueTab === 'CURRENT_ROOM' ? 'bg-white font-semibold text-slate-900 border border-slate-200' : 'text-slate-600'
-                }`}
-              >
-                Room {activeStation} ({currentRoomQueue.length})
-              </button>
-              <button
-                type="button"
-                onClick={() => setQueueTab('RESULTS_READY')}
-                className={`flex-1 py-1 rounded text-center transition-colors cursor-pointer ${
-                  queueTab === 'RESULTS_READY' ? 'bg-white font-semibold text-slate-900 border border-slate-200' : 'text-slate-600'
-                }`}
-              >
-                Results Ready ({totalResultsReadyAllRooms})
-              </button>
-              <button
-                type="button"
-                onClick={() => setQueueTab('ALL_ROOMS')}
-                className={`flex-1 py-1 rounded text-center transition-colors cursor-pointer ${
-                  queueTab === 'ALL_ROOMS' ? 'bg-white font-semibold text-slate-900 border border-slate-200' : 'text-slate-600'
-                }`}
-              >
-                All ({totalWaitingAllRooms})
-              </button>
-            </div>
+          {/* Queue Tab Switchers */}
+          <div className="grid grid-cols-3 gap-1 bg-slate-100 p-1 rounded-lg text-[11px] font-semibold text-slate-600">
+            <button
+              type="button"
+              onClick={() => setQueueTab('CURRENT_ROOM')}
+              className={`py-1 rounded-md transition-all cursor-pointer text-center ${
+                queueTab === 'CURRENT_ROOM' ? 'bg-white text-slate-900 shadow-2xs' : 'hover:text-slate-900'
+              }`}
+            >
+              Room ({currentRoomQueue.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setQueueTab('RESULTS_READY')}
+              className={`py-1 rounded-md transition-all cursor-pointer text-center ${
+                queueTab === 'RESULTS_READY' ? 'bg-white text-slate-900 shadow-2xs' : 'hover:text-slate-900'
+              }`}
+            >
+              Ready ({totalResultsReadyAllRooms})
+            </button>
+            <button
+              type="button"
+              onClick={() => setQueueTab('ALL_ROOMS')}
+              className={`py-1 rounded-md transition-all cursor-pointer text-center ${
+                queueTab === 'ALL_ROOMS' ? 'bg-white text-slate-900 shadow-2xs' : 'hover:text-slate-900'
+              }`}
+            >
+              All ({totalWaitingAllRooms})
+            </button>
+          </div>
 
-            {/* Queue List */}
-            <div className="mt-3 space-y-2 max-h-[500px] overflow-y-auto">
-              {queueTab === 'CURRENT_ROOM' ? (
-                currentRoomQueue.length === 0 ? (
-                  <div className="text-center py-6 text-xs text-slate-400">
-                    No patients in Room {activeStation} queue.
-                  </div>
-                ) : (
-                  currentRoomQueue.map((item) => {
-                    const isSelected = item.mrn === selectedPatientMrn;
-                    const isResultsReady = item.status === 'Results Ready';
-                    const isAwaitingDiag = item.status === 'Awaiting Lab/Radiology';
-
-                    return (
-                      <div
-                        key={item.queueId}
-                        onClick={() => handleSelectQueueItem(item)}
-                        className={`p-2.5 rounded border text-xs cursor-pointer transition-colors ${
-                          isSelected
-                            ? 'bg-slate-100 border-slate-400 font-medium'
-                            : isResultsReady
-                            ? 'bg-emerald-50 border-emerald-300'
-                            : isAwaitingDiag
-                            ? 'bg-amber-50 border-amber-200'
-                            : 'bg-white border-slate-200 hover:bg-slate-50'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="font-mono font-bold text-slate-900">
-                            {item.tokenNumber}
-                          </span>
-                          <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
-                            isResultsReady
-                              ? 'bg-emerald-100 text-emerald-800'
-                              : isAwaitingDiag
-                              ? 'bg-amber-100 text-amber-800'
-                              : 'bg-slate-100 text-slate-700'
-                          }`}>
-                            {item.status}
-                          </span>
-                        </div>
-                        <div className="font-semibold text-slate-900 mt-1">{item.patientName}</div>
-                        <div className="text-slate-500 text-[11px] font-mono">
-                          MRN: {item.mrn} • {item.priority}
-                        </div>
-                        {item.awaitingDiagnosticsNotes && (
-                          <div className="mt-1 text-[11px] text-slate-600 bg-white/70 p-1 rounded border border-slate-200">
-                            {item.awaitingDiagnosticsNotes}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })
-                )
-              ) : queueTab === 'RESULTS_READY' ? (
-                (opdQueue || []).filter((q) => q.status === 'Results Ready').length === 0 ? (
-                  <div className="text-center py-6 text-xs text-slate-400">
-                    No diagnostic returns pending.
-                  </div>
-                ) : (
-                  (opdQueue || [])
-                    .filter((q) => q.status === 'Results Ready')
-                    .map((item) => (
-                      <div
-                        key={item.queueId}
-                        onClick={() => handleSelectQueueItem(item)}
-                        className="p-2.5 rounded border border-emerald-300 bg-emerald-50 text-xs cursor-pointer hover:bg-emerald-100 transition-colors"
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="font-mono font-bold text-emerald-950">
-                            {item.tokenNumber} (Room {item.assignedRoom})
-                          </span>
-                          <span className="text-[10px] bg-emerald-200 text-emerald-900 px-1.5 py-0.5 rounded font-semibold">
-                            Results Finalized
-                          </span>
-                        </div>
-                        <div className="font-semibold text-emerald-950 mt-1">{item.patientName}</div>
-                        <div className="text-emerald-800 text-[11px]">MRN: {item.mrn}</div>
-                      </div>
-                    ))
-                )
-              ) : (
-                <div className="space-y-1.5">
-                  {OPD_STATIONS.map((stn) => {
-                    const stnWaiting = (opdQueue || []).filter(
-                      (q) => q.assignedRoom === stn.stationNumber && q.status === 'Waiting'
-                    ).length;
-                    return (
-                      <div
-                        key={stn.stationNumber}
-                        onClick={() => setActiveStation(stn.stationNumber)}
-                        className={`p-2 rounded border text-xs cursor-pointer flex items-center justify-between ${
-                          activeStation === stn.stationNumber ? 'bg-slate-100 border-slate-400 font-semibold' : 'bg-white border-slate-200 hover:bg-slate-50'
-                        }`}
-                      >
-                        <span>{stn.name}</span>
-                        <span className="text-slate-500 font-mono">{stnWaiting} wait</span>
-                      </div>
-                    );
-                  })}
+          {/* Queue List Stream */}
+          <div className="space-y-2 max-h-[520px] overflow-y-auto pr-0.5">
+            {queueTab === 'CURRENT_ROOM' ? (
+              currentRoomQueue.length === 0 ? (
+                <div className="text-center py-8 text-slate-400 text-xs">
+                  <Users className="w-6 h-6 mx-auto mb-1 text-slate-300" />
+                  No patients waiting in Room {activeStation}
                 </div>
-              )}
-            </div>
+              ) : (
+                currentRoomQueue.map((item) => {
+                  const isSelected = item.mrn === selectedPatientMrn;
+                  const isResultsReady = item.status === 'Results Ready';
+                  const isAwaitingDiag = item.status === 'Awaiting Lab/Radiology';
+
+                  return (
+                    <div
+                      key={item.queueId}
+                      onClick={() => handleSelectQueueItem(item)}
+                      className={`p-3 rounded-xl border text-xs cursor-pointer transition-all ${
+                        isSelected
+                          ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
+                          : isResultsReady
+                          ? 'bg-emerald-50/80 border-emerald-300 text-emerald-950 hover:bg-emerald-100/60'
+                          : isAwaitingDiag
+                          ? 'bg-amber-50/80 border-amber-300 text-amber-950 hover:bg-amber-100/60'
+                          : 'bg-white border-slate-200/80 hover:bg-slate-50 hover:border-slate-300 text-slate-800'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className={`font-mono font-bold text-xs ${isSelected ? 'text-white' : 'text-slate-900'}`}>
+                          {item.tokenNumber}
+                        </span>
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                          isSelected
+                            ? 'bg-slate-800 text-white'
+                            : isResultsReady
+                            ? 'bg-emerald-200 text-emerald-900'
+                            : isAwaitingDiag
+                            ? 'bg-amber-200 text-amber-900'
+                            : 'bg-slate-100 text-slate-600'
+                        }`}>
+                          {item.status}
+                        </span>
+                      </div>
+
+                      <div className={`font-bold mt-1 text-xs ${isSelected ? 'text-white' : 'text-slate-900'}`}>
+                        {item.patientName}
+                      </div>
+
+                      <div className={`text-[11px] font-mono mt-0.5 ${isSelected ? 'text-slate-300' : 'text-slate-500'}`}>
+                        {item.mrn} • {item.priority}
+                      </div>
+
+                      {item.awaitingDiagnosticsNotes && (
+                        <div className={`mt-1.5 p-1.5 rounded text-[10px] ${
+                          isSelected ? 'bg-slate-800 text-slate-200' : 'bg-white/80 border border-slate-200 text-slate-600'
+                        }`}>
+                          {item.awaitingDiagnosticsNotes}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )
+            ) : queueTab === 'RESULTS_READY' ? (
+              (opdQueue || []).filter((q) => q.status === 'Results Ready').length === 0 ? (
+                <div className="text-center py-8 text-slate-400 text-xs">
+                  No diagnostic returns pending.
+                </div>
+              ) : (
+                (opdQueue || [])
+                  .filter((q) => q.status === 'Results Ready')
+                  .map((item) => (
+                    <div
+                      key={item.queueId}
+                      onClick={() => handleSelectQueueItem(item)}
+                      className="p-3 rounded-xl border border-emerald-300 bg-emerald-50 text-xs cursor-pointer hover:bg-emerald-100 transition-colors"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono font-bold text-emerald-950">
+                          {item.tokenNumber} (Room {item.assignedRoom})
+                        </span>
+                        <span className="text-[10px] bg-emerald-200 text-emerald-900 px-1.5 py-0.5 rounded-full font-bold">
+                          Results Ready
+                        </span>
+                      </div>
+                      <div className="font-bold text-emerald-950 mt-1">{item.patientName}</div>
+                      <div className="text-emerald-800 text-[11px] font-mono">MRN: {item.mrn}</div>
+                    </div>
+                  ))
+              )
+            ) : (
+              <div className="space-y-1.5">
+                {OPD_STATIONS.map((stn) => {
+                  const stnWaiting = (opdQueue || []).filter(
+                    (q) => q.assignedRoom === stn.stationNumber && q.status === 'Waiting'
+                  ).length;
+                  return (
+                    <div
+                      key={stn.stationNumber}
+                      onClick={() => setActiveStation(stn.stationNumber)}
+                      className={`p-2.5 rounded-xl border text-xs cursor-pointer flex items-center justify-between transition-colors ${
+                        activeStation === stn.stationNumber
+                          ? 'bg-slate-900 text-white font-semibold'
+                          : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-800'
+                      }`}
+                    >
+                      <span>{stn.name}</span>
+                      <span className="font-mono text-[11px] opacity-80">{stnWaiting} wait</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* RIGHT COLUMN: STEP-BY-STEP CONSULTATION FORM */}
-        <div className="lg:col-span-8 space-y-3">
-          {/* STEPPER HEADER */}
-          <div className="bg-white border border-slate-200 rounded-lg p-2.5">
-            <div className="grid grid-cols-5 gap-1 text-xs">
-              {stepsList.map((st) => {
-                const isCurrent = currentStep === st.number;
-                const isPassed = currentStep > st.number;
-
-                return (
-                  <button
-                    key={st.number}
-                    type="button"
-                    onClick={() => setCurrentStep(st.number as OPDStep)}
-                    className={`py-1.5 px-2 rounded text-center border transition-colors cursor-pointer ${
-                      isCurrent
-                        ? 'bg-slate-900 text-white border-slate-900 font-semibold'
-                        : isPassed
-                        ? 'bg-slate-100 text-slate-800 border-slate-300'
-                        : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
-                    }`}
-                  >
-                    <span>{st.label}</span>
-                  </button>
-                );
-              })}
-            </div>
+        {/* RIGHT COLUMN: CLINICAL ENCOUNTER WORKBENCH (8 Cols) */}
+        <div className="lg:col-span-8 bg-white border border-slate-200 rounded-xl p-4 sm:p-5 shadow-xs space-y-4">
+          
+          {/* Top 5-Step Stepper Bar */}
+          <div className="grid grid-cols-5 gap-1.5 bg-slate-50 p-1.5 rounded-xl border border-slate-200 text-[11px]">
+            {stepsList.map((st) => (
+              <button
+                key={st.num}
+                type="button"
+                onClick={() => setCurrentStep(st.num as OPDStep)}
+                className={`py-2 px-1 rounded-lg font-bold transition-all text-center cursor-pointer truncate ${
+                  currentStep === st.num
+                    ? 'bg-slate-900 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                }`}
+              >
+                {st.label}
+              </button>
+            ))}
           </div>
 
-          {/* STEP 1: PATIENT CARD & HISTORY */}
+          {/* STEP 1: PATIENT DEMOGRAPHICS & MEDICAL HISTORY */}
           {currentStep === 1 && (
-            <div className="bg-white border border-slate-200 rounded-lg p-4 space-y-4 text-xs">
-              <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                <span className="font-bold text-slate-900 text-sm">Step 1: Patient Details & History</span>
-                <span className="font-mono text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
-                  MRN: {patient?.mrn || 'N/A'}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                <span className="font-bold text-slate-900 text-sm">Step 1: Patient Details & Background</span>
+                <span className="font-mono text-slate-500 font-bold text-xs bg-slate-100 px-2 py-0.5 rounded">
+                  {patient?.mrn}
                 </span>
               </div>
 
-              {patient && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="border border-slate-200 rounded p-3 space-y-1.5">
-                    <div className="font-semibold text-slate-900 text-sm">
-                      {patient.firstName} {patient.middleName} {patient.lastName}
-                    </div>
-                    <div>Gender / Age: <span className="font-medium text-slate-800">{patient.gender}, {patientAge} yrs</span></div>
-                    <div>Date of Birth: <span className="font-medium text-slate-800">{patient.dob}</span></div>
-                    <div>Phone: <span className="font-medium text-slate-800">{patient.phone}</span></div>
-                    <div>Payment: <span className="font-medium text-slate-800">{patient.payerClass}</span></div>
-                  </div>
-
-                  <div className="border border-slate-200 rounded p-3 space-y-1.5">
-                    <div>Blood Group: <span className="font-bold text-slate-900">{patient.bloodGroup || 'O+'}</span></div>
-                    <div>National ID: <span className="font-medium text-slate-800">{patient.nationalId}</span></div>
-                    <div>Emergency Contact: <span className="font-medium text-slate-800">{patient.emergencyContactName} ({patient.emergencyContactPhone})</span></div>
-                    <div className="text-rose-700 font-medium">
-                      Allergies: {patient.allergies?.join(', ') || 'None recorded'}
-                    </div>
-                  </div>
+              {/* Patient Profile Card */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs">
+                <div className="space-y-1">
+                  <div className="text-base font-bold text-slate-900">{patient?.firstName} {patient?.middleName} {patient?.lastName}</div>
+                  <div className="text-slate-600">Gender: <strong className="text-slate-800">{patient?.gender}</strong> • Age: <strong className="text-slate-800">{patientAge} yrs</strong> (DOB: {patient?.dob})</div>
+                  <div className="text-slate-600">Phone: <strong className="text-slate-800">{patient?.phoneNumber}</strong></div>
+                  <div className="text-slate-600">Payer: <span className="font-semibold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded text-[11px]">{patient?.paymentCategory}</span></div>
                 </div>
-              )}
 
-              {/* History Table */}
-              <div className="border border-slate-200 rounded p-3 space-y-2">
-                <div className="font-semibold text-slate-800">Prior Outpatient Encounters ({patientEncounters.length})</div>
-                {patientEncounters.length === 0 ? (
-                  <div className="text-slate-400">No prior encounters on record.</div>
+                <div className="space-y-1 md:border-l md:border-slate-200 md:pl-4">
+                  <div className="text-slate-600">Blood Group: <strong className="text-rose-700 font-bold text-sm">{patient?.bloodGroup || 'O+'}</strong></div>
+                  <div className="text-slate-600">National ID: <strong className="font-mono text-slate-800">{patient?.nationalId || 'ETH-99384721'}</strong></div>
+                  <div className="text-slate-600">Emergency Contact: {patient?.emergencyContactName} ({patient?.emergencyContactRelationship}) - {patient?.emergencyContactPhone}</div>
+                  <div className="text-rose-700 font-semibold mt-1">Allergies: {patient?.allergies?.join(', ') || 'No known drug allergies'}</div>
+                </div>
+              </div>
+
+              {/* Prior Outpatient Encounters */}
+              <div className="space-y-2">
+                <span className="font-bold text-slate-800 text-xs">Prior Encounters at FPH ({priorEncounters.length})</span>
+                {priorEncounters.length === 0 ? (
+                  <div className="p-4 text-center text-slate-400 bg-slate-50 rounded-xl border border-slate-200 text-xs">
+                    No prior medical records for this patient.
+                  </div>
                 ) : (
-                  <div className="space-y-1.5 max-h-40 overflow-y-auto">
-                    {patientEncounters.map((e) => (
-                      <div key={e.encounterId} className="p-2 bg-slate-50 rounded border border-slate-200">
-                        <div className="flex justify-between font-medium">
-                          <span>{e.createdAt} • Room {e.stationNumber}</span>
-                          <span>{e.doctorName}</span>
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {priorEncounters.map((enc) => (
+                      <div key={enc.encounterId} className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                        <div className="flex items-center justify-between text-[11px]">
+                          <span className="font-bold text-slate-900">{enc.timestamp} • Room {enc.stationNumber}</span>
+                          <span className="text-slate-500 font-semibold">{enc.doctorName}</span>
                         </div>
-                        <div className="text-slate-600 mt-0.5">Complaints: {e.chiefComplaints}</div>
-                        <div className="text-slate-500 mt-0.5">Plan: {e.carePlan}</div>
+                        <div className="text-slate-700 text-xs"><strong>Complaints:</strong> {enc.chiefComplaints}</div>
+                        <div className="text-slate-600 text-xs"><strong>Plan:</strong> {enc.carePlan}</div>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
 
-              <div className="flex justify-end pt-2">
+              {/* Step Navigation Button */}
+              <div className="flex justify-end pt-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setCurrentStep(2)}
-                  className="bg-slate-900 hover:bg-slate-800 text-white font-medium px-4 py-1.5 rounded transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-semibold text-xs transition-colors cursor-pointer shadow-xs"
                 >
-                  Next: Subjective &rarr;
+                  <span>Next: Subjective History</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
           )}
 
-          {/* STEP 2: SUBJECTIVE */}
+          {/* STEP 2: SUBJECTIVE HISTORY & SYMPTOMS */}
           {currentStep === 2 && (
-            <div className="bg-white border border-slate-200 rounded-lg p-4 space-y-4 text-xs">
-              <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                <span className="font-bold text-slate-900 text-sm">Step 2: Subjective (History of Present Illness)</span>
-                <span className="text-slate-500">Patient: {patient?.firstName} {patient?.lastName}</span>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                <span className="font-bold text-slate-900 text-sm">Step 2: Subjective History & Symptoms</span>
+                <span className="text-slate-400 text-[11px]">Patient reported clinical complaints</span>
               </div>
 
               <div className="space-y-3">
                 <div>
-                  <label className="block font-semibold text-slate-800 mb-1">Chief Complaints</label>
-                  <textarea
-                    rows={2}
+                  <label className="block font-bold text-slate-800 mb-1">Chief Complaint *</label>
+                  <input
+                    type="text"
                     value={chiefComplaints}
                     onChange={(e) => setChiefComplaints(e.target.value)}
-                    className="w-full border border-slate-300 rounded p-2 text-xs focus:border-slate-600 focus:outline-hidden"
+                    placeholder="Enter main reason for encounter..."
+                    className="w-full px-3 py-2 border border-slate-200 focus:border-emerald-600 rounded-xl text-xs bg-slate-50 focus:bg-white outline-hidden font-medium"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-slate-800 mb-1">History of Present Illness (HPI) & Associated Symptoms</label>
+                  <label className="block font-bold text-slate-800 mb-1">History of Presenting Illness (HPI)</label>
                   <textarea
                     rows={3}
                     value={subjectiveSymptoms}
                     onChange={(e) => setSubjectiveSymptoms(e.target.value)}
-                    className="w-full border border-slate-300 rounded p-2 text-xs focus:border-slate-600 focus:outline-hidden"
+                    placeholder="Onset, character, severity, radiation, associated symptoms..."
+                    className="w-full px-3 py-2 border border-slate-200 focus:border-emerald-600 rounded-xl text-xs bg-slate-50 focus:bg-white outline-hidden"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-slate-800 mb-1">Past Medical, Surgical & Family History</label>
-                  <textarea
-                    rows={2}
+                  <label className="block font-bold text-slate-800 mb-1">Past Medical, Surgical & Family History</label>
+                  <input
+                    type="text"
                     value={medicalHistoryNotes}
                     onChange={(e) => setMedicalHistoryNotes(e.target.value)}
-                    className="w-full border border-slate-300 rounded p-2 text-xs focus:border-slate-600 focus:outline-hidden"
+                    placeholder="Prior illnesses, chronic conditions, surgeries, tobacco/alcohol..."
+                    className="w-full px-3 py-2 border border-slate-200 focus:border-emerald-600 rounded-xl text-xs bg-slate-50 focus:bg-white outline-hidden"
                   />
                 </div>
               </div>
 
-              <div className="flex justify-between pt-2">
+              {/* Navigation Buttons */}
+              <div className="flex items-center justify-between pt-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setCurrentStep(1)}
-                  className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium px-4 py-1.5 rounded transition-colors cursor-pointer"
+                  className="flex items-center gap-1 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold text-xs transition-colors cursor-pointer"
                 >
-                  &larr; Back
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>Back</span>
                 </button>
+
                 <button
                   type="button"
                   onClick={() => setCurrentStep(3)}
-                  className="bg-slate-900 hover:bg-slate-800 text-white font-medium px-4 py-1.5 rounded transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-semibold text-xs transition-colors cursor-pointer shadow-xs"
                 >
-                  Next: Objective & Vitals &rarr;
+                  <span>Next: Vitals & Exam</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
           )}
 
-          {/* STEP 3: OBJECTIVE & VITALS */}
+          {/* STEP 3: OBJECTIVE VITALS & PHYSICAL EXAMINATION */}
           {currentStep === 3 && (
-            <div className="bg-white border border-slate-200 rounded-lg p-4 space-y-4 text-xs">
-              <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                <span className="font-bold text-slate-900 text-sm">Step 3: Objective (Vitals & Physical Exam)</span>
-                <span className="text-slate-500">Patient: {patient?.firstName} {patient?.lastName}</span>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                <span className="font-bold text-slate-900 text-sm">Step 3: Objective Vitals & Physical Exam</span>
+                <span className="text-slate-400 text-[11px]">Triage and physician physical examination</span>
               </div>
 
               {/* Vitals Grid */}
-              <div>
-                <label className="block font-semibold text-slate-800 mb-2">Patient Vitals</label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
-                  <div className="border border-slate-200 rounded p-2 text-center bg-slate-50">
-                    <div className="text-slate-500 text-[11px]">BP Systolic</div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">Blood Pressure (mmHg)</label>
+                  <div className="flex items-center gap-1">
                     <input
                       type="number"
                       value={vitals.bpSystolic}
                       onChange={(e) => setVitals({ ...vitals, bpSystolic: Number(e.target.value) })}
-                      className="w-full font-bold text-center text-slate-900 mt-1 bg-white border border-slate-300 rounded py-1"
+                      className="w-16 px-2 py-1 border border-slate-200 rounded-lg text-xs font-mono font-bold bg-white text-center"
                     />
-                    <span className="text-[10px] text-slate-400">mmHg</span>
-                  </div>
-                  <div className="border border-slate-200 rounded p-2 text-center bg-slate-50">
-                    <div className="text-slate-500 text-[11px]">BP Diastolic</div>
+                    <span className="text-slate-400 font-bold">/</span>
                     <input
                       type="number"
                       value={vitals.bpDiastolic}
                       onChange={(e) => setVitals({ ...vitals, bpDiastolic: Number(e.target.value) })}
-                      className="w-full font-bold text-center text-slate-900 mt-1 bg-white border border-slate-300 rounded py-1"
+                      className="w-16 px-2 py-1 border border-slate-200 rounded-lg text-xs font-mono font-bold bg-white text-center"
                     />
-                    <span className="text-[10px] text-slate-400">mmHg</span>
                   </div>
-                  <div className="border border-slate-200 rounded p-2 text-center bg-slate-50">
-                    <div className="text-slate-500 text-[11px]">Heart Rate</div>
-                    <input
-                      type="number"
-                      value={vitals.heartRate}
-                      onChange={(e) => setVitals({ ...vitals, heartRate: Number(e.target.value) })}
-                      className="w-full font-bold text-center text-slate-900 mt-1 bg-white border border-slate-300 rounded py-1"
-                    />
-                    <span className="text-[10px] text-slate-400">bpm</span>
-                  </div>
-                  <div className="border border-slate-200 rounded p-2 text-center bg-slate-50">
-                    <div className="text-slate-500 text-[11px]">Resp Rate</div>
-                    <input
-                      type="number"
-                      value={vitals.respRate}
-                      onChange={(e) => setVitals({ ...vitals, respRate: Number(e.target.value) })}
-                      className="w-full font-bold text-center text-slate-900 mt-1 bg-white border border-slate-300 rounded py-1"
-                    />
-                    <span className="text-[10px] text-slate-400">/min</span>
-                  </div>
-                  <div className="border border-slate-200 rounded p-2 text-center bg-slate-50">
-                    <div className="text-slate-500 text-[11px]">Temperature</div>
-                    <input
-                      type="number"
-                      step="0.1"
-                      value={vitals.tempCelsius}
-                      onChange={(e) => setVitals({ ...vitals, tempCelsius: Number(e.target.value) })}
-                      className="w-full font-bold text-center text-slate-900 mt-1 bg-white border border-slate-300 rounded py-1"
-                    />
-                    <span className="text-[10px] text-slate-400">°C</span>
-                  </div>
-                  <div className="border border-slate-200 rounded p-2 text-center bg-slate-50">
-                    <div className="text-slate-500 text-[11px]">SpO2</div>
-                    <input
-                      type="number"
-                      value={vitals.spO2}
-                      onChange={(e) => setVitals({ ...vitals, spO2: Number(e.target.value) })}
-                      className="w-full font-bold text-center text-slate-900 mt-1 bg-white border border-slate-300 rounded py-1"
-                    />
-                    <span className="text-[10px] text-slate-400">%</span>
-                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">Pulse (bpm)</label>
+                  <input
+                    type="number"
+                    value={vitals.heartRate}
+                    onChange={(e) => setVitals({ ...vitals, heartRate: Number(e.target.value) })}
+                    className="w-full px-2 py-1 border border-slate-200 rounded-lg text-xs font-mono font-bold bg-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">Temperature (°C)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={vitals.tempCelsius}
+                    onChange={(e) => setVitals({ ...vitals, tempCelsius: Number(e.target.value) })}
+                    className="w-full px-2 py-1 border border-slate-200 rounded-lg text-xs font-mono font-bold bg-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">SpO2 (%)</label>
+                  <input
+                    type="number"
+                    value={vitals.spO2}
+                    onChange={(e) => setVitals({ ...vitals, spO2: Number(e.target.value) })}
+                    className="w-full px-2 py-1 border border-slate-200 rounded-lg text-xs font-mono font-bold bg-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">Resp Rate (/min)</label>
+                  <input
+                    type="number"
+                    value={vitals.respRate}
+                    onChange={(e) => setVitals({ ...vitals, respRate: Number(e.target.value) })}
+                    className="w-full px-2 py-1 border border-slate-200 rounded-lg text-xs font-mono font-bold bg-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">Blood Sugar (mg/dL)</label>
+                  <input
+                    type="number"
+                    value={fastingBloodSugar}
+                    onChange={(e) => setFastingBloodSugar(Number(e.target.value))}
+                    className="w-full px-2 py-1 border border-slate-200 rounded-lg text-xs font-mono font-bold bg-white"
+                  />
                 </div>
               </div>
 
-              {/* Station Specific Fields */}
-              {activeStation === 3 && (
-                <div className="border border-slate-200 rounded p-3 bg-slate-50 space-y-2">
-                  <div className="font-semibold text-slate-800">Pediatrics Specifics</div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-slate-600 mb-1">Child Weight (kg)</label>
-                      <input
-                        type="number"
-                        value={childWeightKg}
-                        onChange={(e) => setChildWeightKg(Number(e.target.value))}
-                        className="w-full border border-slate-300 rounded p-1.5 bg-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-slate-600 mb-1">Vaccinations Up-to-Date?</label>
-                      <select
-                        value={vaccinationUpToDate ? 'true' : 'false'}
-                        onChange={(e) => setVaccinationUpToDate(e.target.value === 'true')}
-                        className="w-full border border-slate-300 rounded p-1.5 bg-white"
-                      >
-                        <option value="true">Yes - Complete for age</option>
-                        <option value="false">No - Defaulter / Incomplete</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {activeStation === 5 && (
-                <div className="border border-slate-200 rounded p-3 bg-slate-50 space-y-2">
-                  <div className="font-semibold text-slate-800">OB-GYN / Antenatal Specifics</div>
-                  <div className="grid grid-cols-3 gap-3">
-                    <div>
-                      <label className="block text-slate-600 mb-1">Obstetric History</label>
-                      <input
-                        type="text"
-                        value={gravidaPara}
-                        onChange={(e) => setGravidaPara(e.target.value)}
-                        className="w-full border border-slate-300 rounded p-1.5 bg-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-slate-600 mb-1">Gestational Age (weeks)</label>
-                      <input
-                        type="number"
-                        value={gestationalWeeks}
-                        onChange={(e) => setGestationalWeeks(Number(e.target.value))}
-                        className="w-full border border-slate-300 rounded p-1.5 bg-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-slate-600 mb-1">Fetal Heart Rate (bpm)</label>
-                      <input
-                        type="number"
-                        value={fetalHeartRate}
-                        onChange={(e) => setFetalHeartRate(Number(e.target.value))}
-                        className="w-full border border-slate-300 rounded p-1.5 bg-white"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
+              {/* Physical Exam Findings */}
               <div>
-                <label className="block font-semibold text-slate-800 mb-1">Physical Examination Findings</label>
+                <label className="block font-bold text-slate-800 mb-1">Physical Examination Findings</label>
                 <textarea
                   rows={3}
                   value={objectiveObservations}
                   onChange={(e) => setObjectiveObservations(e.target.value)}
-                  className="w-full border border-slate-300 rounded p-2 text-xs focus:border-slate-600 focus:outline-hidden"
+                  placeholder="Systemic examination findings (HEENT, Chest, CVS, Abdomen, Neuro, Extremities)..."
+                  className="w-full px-3 py-2 border border-slate-200 focus:border-emerald-600 rounded-xl text-xs bg-slate-50 focus:bg-white outline-hidden"
                 />
               </div>
 
-              <div className="flex justify-between pt-2">
+              {/* Navigation Buttons */}
+              <div className="flex items-center justify-between pt-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setCurrentStep(2)}
-                  className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium px-4 py-1.5 rounded transition-colors cursor-pointer"
+                  className="flex items-center gap-1 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold text-xs transition-colors cursor-pointer"
                 >
-                  &larr; Back
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>Back</span>
                 </button>
+
                 <button
                   type="button"
                   onClick={() => setCurrentStep(4)}
-                  className="bg-slate-900 hover:bg-slate-800 text-white font-medium px-4 py-1.5 rounded transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-semibold text-xs transition-colors cursor-pointer shadow-xs"
                 >
-                  Next: Diagnostic Workup &rarr;
+                  <span>Next: Diagnostic Orders</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
           )}
 
-          {/* STEP 4: DIAGNOSTICS */}
+          {/* STEP 4: DIAGNOSTIC WORKUP (LAB & RADIOLOGY) */}
           {currentStep === 4 && (
-            <div className="bg-white border border-slate-200 rounded-lg p-4 space-y-4 text-xs">
-              <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                <span className="font-bold text-slate-900 text-sm">Step 4: Diagnostic Workup (Lab & Radiology)</span>
-                <button
-                  type="button"
-                  onClick={handleSimulateDiagnosticsCompletion}
-                  className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded border border-slate-300 font-medium transition-colors cursor-pointer"
-                  title="Simulate immediate lab/radiology verification"
-                >
-                  Simulate Verified Results
-                </button>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                <span className="font-bold text-slate-900 text-sm">Step 4: Diagnostic Workup & Results</span>
+                <span className="text-slate-400 text-[11px]">Order and review investigations</span>
               </div>
 
-              {/* Order Lab & Radiology Checkboxes */}
-              <div className="space-y-3">
-                <div className="border border-slate-200 rounded p-3 space-y-2">
-                  <div className="flex items-center gap-2">
+              {/* Orders Selection Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {/* Lab Order */}
+                <div className={`p-4 rounded-xl border transition-all ${
+                  orderLab ? 'bg-teal-50/50 border-teal-300' : 'bg-slate-50 border-slate-200'
+                }`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <FlaskConical className="w-4 h-4 text-teal-700" />
+                      <span className="font-bold text-slate-900 text-xs">Laboratory Investigation</span>
+                    </div>
                     <input
                       type="checkbox"
-                      id="labCheck"
                       checked={orderLab}
                       onChange={(e) => setOrderLab(e.target.checked)}
-                      className="rounded border-slate-300"
+                      className="w-4 h-4 text-teal-600 rounded cursor-pointer"
                     />
-                    <label htmlFor="labCheck" className="font-semibold text-slate-800 cursor-pointer">
-                      Order Laboratory Investigation
-                    </label>
                   </div>
 
                   {orderLab && (
-                    <div className="pt-2">
-                      <select
-                        value={labTestType}
-                        onChange={(e) => setLabTestType(e.target.value)}
-                        className="w-full border border-slate-300 rounded p-1.5 bg-white text-xs"
-                      >
-                        <option value="H_PYLORI_STOOL">H. Pylori Stool Antigen Test</option>
-                        <option value="CBC_DIFF">Complete Blood Count (CBC / Diff)</option>
-                        <option value="RPR_VDRL">RPR / VDRL Syphilis Screen</option>
-                        <option value="LFT_RFT">Liver & Renal Panel (LFT / RFT)</option>
-                      </select>
-                    </div>
+                    <select
+                      value={labTestType}
+                      onChange={(e) => setLabTestType(e.target.value)}
+                      className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs bg-white outline-hidden cursor-pointer"
+                    >
+                      <option value="H_PYLORI_STOOL">H. Pylori Stool Antigen (ETB 150)</option>
+                      <option value="CBC_DIFF">Complete Blood Count (CBC) (ETB 180)</option>
+                      <option value="LFT_RFT">Liver & Renal Function Panel (ETB 250)</option>
+                      <option value="RPR_VDRL">RPR / VDRL Syphilis Screen (ETB 100)</option>
+                    </select>
                   )}
                 </div>
 
-                <div className="border border-slate-200 rounded p-3 space-y-2">
-                  <div className="flex items-center gap-2">
+                {/* Radiology Order */}
+                <div className={`p-4 rounded-xl border transition-all ${
+                  orderRadiology ? 'bg-sky-50/50 border-sky-300' : 'bg-slate-50 border-slate-200'
+                }`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <Radio className="w-4 h-4 text-sky-700" />
+                      <span className="font-bold text-slate-900 text-xs">Radiology & Imaging</span>
+                    </div>
                     <input
                       type="checkbox"
-                      id="radCheck"
                       checked={orderRadiology}
                       onChange={(e) => setOrderRadiology(e.target.checked)}
-                      className="rounded border-slate-300"
+                      className="w-4 h-4 text-sky-600 rounded cursor-pointer"
                     />
-                    <label htmlFor="radCheck" className="font-semibold text-slate-800 cursor-pointer">
-                      Order Radiology / Ultrasound Investigation
-                    </label>
                   </div>
 
                   {orderRadiology && (
-                    <div className="grid grid-cols-2 gap-2 pt-2">
+                    <div className="grid grid-cols-2 gap-2">
                       <select
                         value={radiologyType}
                         onChange={(e) => setRadiologyType(e.target.value as any)}
-                        className="border border-slate-300 rounded p-1.5 bg-white text-xs"
+                        className="px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs bg-white outline-hidden cursor-pointer"
                       >
                         <option value="Ultrasound">Ultrasound</option>
-                        <option value="X-Ray">X-Ray</option>
+                        <option value="X-Ray">Digital X-Ray</option>
                         <option value="CT">CT Scan</option>
                       </select>
                       <input
                         type="text"
                         value={radiologyRegion}
                         onChange={(e) => setRadiologyRegion(e.target.value)}
-                        placeholder="Target Region (e.g. Abdominal)"
-                        className="border border-slate-300 rounded p-1.5 text-xs bg-white"
+                        placeholder="e.g. Abdomen, Chest..."
+                        className="px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs bg-white outline-hidden"
                       />
                     </div>
                   )}
                 </div>
+              </div>
 
-                {(orderLab || orderRadiology) && (
-                  <div className="bg-slate-50 border border-slate-200 rounded p-3 flex items-center justify-between">
-                    <div>
-                      <div className="font-semibold text-slate-800">Dispatch Patient to Diagnostics</div>
-                      <div className="text-slate-500 text-[11px]">
-                        The patient will move to Diagnostics and return to your queue once results are ready.
-                      </div>
-                    </div>
+              {/* Verified Results Section */}
+              {(patientLabResults.length > 0 || patientRadReports.length > 0) && (
+                <div className="border border-slate-200 rounded-xl p-3.5 bg-slate-50 space-y-2">
+                  <div className="font-bold text-slate-900 text-xs flex items-center justify-between">
+                    <span>Active Diagnostic Results for Patient</span>
                     <button
                       type="button"
-                      onClick={handleSendToDiagnostics}
-                      className="bg-slate-900 hover:bg-slate-800 text-white font-medium px-3 py-1.5 rounded transition-colors cursor-pointer"
+                      onClick={handleSimulateDiagnosticsCompletion}
+                      className="text-[10px] font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded cursor-pointer"
                     >
-                      Send & Next Patient
+                      ⚡ Fast-Track Diagnostic Return
                     </button>
                   </div>
-                )}
-              </div>
 
-              {/* View Existing Diagnostic Reports */}
-              <div className="space-y-2 pt-2 border-t border-slate-200">
-                <div className="font-semibold text-slate-800">Verified Diagnostic Results on File</div>
-                {patientLabOrders.length === 0 && patientRadiologyOrders.length === 0 ? (
-                  <div className="text-slate-400 text-xs">No lab or radiology reports currently on file.</div>
-                ) : (
-                  <div className="space-y-2">
-                    {patientLabOrders.map((l) => (
-                      <div key={l.labOrderId} className="p-2 border border-slate-200 rounded bg-slate-50">
-                        <div className="flex justify-between font-semibold text-slate-800">
-                          <span>{l.testName} ({l.labOrderId})</span>
-                          <span className={l.verificationStatus === 'Verified' ? 'text-emerald-700 font-bold' : 'text-slate-500'}>
-                            {l.verificationStatus}
+                  {patientLabResults.map((lr) => (
+                    <div key={lr.labOrderId} className="p-2.5 bg-white rounded-lg border border-slate-200 text-xs">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-slate-900">{lr.testName}</span>
+                        <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded">
+                          {lr.verificationStatus}
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-slate-600 mt-1">
+                        {lr.results.map((r, i) => (
+                          <span key={i} className="mr-3 font-medium">
+                            {r.parameter}: <strong className={r.isAbnormal ? 'text-rose-600' : 'text-slate-900'}>{r.value} {r.unit}</strong>
                           </span>
-                        </div>
-                        <div className="mt-1 space-y-1">
-                          {l.results.map((r, i) => (
-                            <div key={i} className="flex justify-between text-slate-700 font-mono text-[11px]">
-                              <span>{r.parameter}:</span>
-                              <span className={r.isAbnormal ? 'text-rose-600 font-bold' : 'font-semibold'}>
-                                {r.value} {r.unit} (Ref: {r.referenceRange})
-                              </span>
-                            </div>
-                          ))}
-                        </div>
+                        ))}
                       </div>
-                    ))}
+                    </div>
+                  ))}
+                </div>
+              )}
 
-                    {patientRadiologyOrders.map((r) => (
-                      <div key={r.radiologyOrderId} className="p-2 border border-slate-200 rounded bg-slate-50">
-                        <div className="flex justify-between font-semibold text-slate-800">
-                          <span>{r.modality} - {r.targetRegion}</span>
-                          <span className="text-emerald-700 font-bold">{r.status}</span>
-                        </div>
-                        <div className="text-slate-700 mt-1 text-[11px]">{r.diagnosticFindings}</div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="flex justify-between pt-2">
+              {/* Navigation Buttons */}
+              <div className="flex items-center justify-between pt-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setCurrentStep(3)}
-                  className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium px-4 py-1.5 rounded transition-colors cursor-pointer"
+                  className="flex items-center gap-1 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold text-xs transition-colors cursor-pointer"
                 >
-                  &larr; Back
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>Back</span>
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setCurrentStep(5)}
-                  className="bg-slate-900 hover:bg-slate-800 text-white font-medium px-4 py-1.5 rounded transition-colors cursor-pointer"
-                >
-                  Next: Assessment & Prescription &rarr;
-                </button>
+
+                <div className="flex items-center gap-2">
+                  {(orderLab || orderRadiology) && (
+                    <button
+                      type="button"
+                      onClick={handleSendToDiagnostics}
+                      className="flex items-center gap-1.5 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-semibold text-xs transition-colors cursor-pointer shadow-xs"
+                    >
+                      <Send className="w-3.5 h-3.5" />
+                      <span>Send to Diagnostics</span>
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep(5)}
+                    className="flex items-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-semibold text-xs transition-colors cursor-pointer shadow-xs"
+                  >
+                    <span>Next: Assessment & Rx</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             </div>
           )}
 
-          {/* STEP 5: ASSESSMENT & CARE PLAN (Rx) */}
+          {/* STEP 5: ASSESSMENT, ICD-10, PRESCRIPTIONS & CARE PLAN */}
           {currentStep === 5 && (
-            <form onSubmit={handleFinalizeEncounter} className="bg-white border border-slate-200 rounded-lg p-4 space-y-4 text-xs">
-              <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+            <form onSubmit={handleFinalizeEncounter} className="space-y-4">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                 <span className="font-bold text-slate-900 text-sm">Step 5: Assessment, Diagnosis & Prescription</span>
-                <span className="text-slate-500">Patient: {patient?.firstName} {patient?.lastName}</span>
+                <span className="text-slate-400 text-[11px]">Final physician sign-off</span>
               </div>
 
-              {/* ICD-10 Search */}
-              <div>
-                <label className="block font-semibold text-slate-800 mb-1">ICD-10 Clinical Diagnosis</label>
-                <input
-                  type="text"
-                  value={icdSearch}
-                  onChange={(e) => setIcdSearch(e.target.value)}
-                  placeholder="Search ICD-10 by code or description..."
-                  className="w-full border border-slate-300 rounded p-1.5 text-xs focus:border-slate-600 focus:outline-hidden"
-                />
+              {/* ICD-10 Diagnosis Selector */}
+              <div className="space-y-2">
+                <label className="block font-bold text-slate-800 text-xs">ICD-10 Clinical Diagnosis *</label>
+                
+                {/* Search Bar */}
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={icdSearch}
+                    onChange={(e) => setIcdSearch(e.target.value)}
+                    placeholder="Search ICD-10 by code or disease name (e.g. Gastritis, Malaria, Hypertension)..."
+                    className="w-full pl-8 pr-3 py-1.5 border border-slate-200 rounded-lg text-xs bg-slate-50 focus:bg-white outline-hidden"
+                  />
+                </div>
 
                 {icdSearch && (
-                  <div className="border border-slate-200 rounded mt-1 max-h-32 overflow-y-auto bg-white">
-                    {filteredIcd10.map((code) => (
+                  <div className="p-2 bg-slate-50 border border-slate-200 rounded-xl max-h-32 overflow-y-auto space-y-1">
+                    {filteredIcd10.map((item) => (
                       <div
-                        key={code.code}
+                        key={item.code}
                         onClick={() => {
-                          handleAddIcd(code);
+                          handleAddIcd(item);
                           setIcdSearch('');
                         }}
-                        className="p-1.5 hover:bg-slate-50 cursor-pointer flex justify-between border-b border-slate-100 last:border-0"
+                        className="p-1.5 hover:bg-white rounded-md text-xs cursor-pointer flex items-center justify-between"
                       >
-                        <span className="font-mono font-semibold text-slate-900">{code.code}</span>
-                        <span className="text-slate-600 truncate ml-2">{code.description}</span>
+                        <span className="font-medium text-slate-900">{item.description}</span>
+                        <span className="font-mono text-slate-500 font-bold bg-slate-200/60 px-1.5 py-0.5 rounded text-[10px]">
+                          {item.code}
+                        </span>
                       </div>
                     ))}
                   </div>
                 )}
 
-                {/* Selected ICD Tags */}
-                <div className="flex flex-wrap gap-1.5 mt-2">
-                  {selectedIcdCodes.map((code) => (
+                {/* Selected Diagnosis Badges */}
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {selectedIcdCodes.map((item) => (
                     <span
-                      key={code.code}
-                      className="bg-slate-100 border border-slate-300 text-slate-800 px-2 py-0.5 rounded text-[11px] flex items-center gap-1"
+                      key={item.code}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-indigo-50 border border-indigo-200 text-indigo-900 font-semibold rounded-lg text-xs"
                     >
-                      <strong className="font-mono">{code.code}</strong>: {code.description}
+                      <span>{item.description} ({item.code})</span>
                       <button
                         type="button"
-                        onClick={() => handleRemoveIcd(code.code)}
-                        className="text-slate-400 hover:text-slate-800 ml-1"
+                        onClick={() => handleRemoveIcd(item.code)}
+                        className="text-indigo-400 hover:text-indigo-700 cursor-pointer"
                       >
-                        &times;
+                        <X className="w-3 h-3" />
                       </button>
                     </span>
                   ))}
                 </div>
               </div>
 
-              {/* Prescription */}
-              <div className="border border-slate-200 rounded p-3 space-y-2">
-                <div className="flex items-center gap-2">
+              {/* Prescription Builder */}
+              <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Pill className="w-4 h-4 text-emerald-700" />
+                    <span className="font-bold text-slate-900 text-xs">E-Prescription Order</span>
+                  </div>
                   <input
                     type="checkbox"
-                    id="rxCheck"
                     checked={orderRx}
                     onChange={(e) => setOrderRx(e.target.checked)}
-                    className="rounded border-slate-300"
+                    className="w-4 h-4 text-emerald-600 rounded cursor-pointer"
                   />
-                  <label htmlFor="rxCheck" className="font-semibold text-slate-800 cursor-pointer">
-                    Issue Electronic Prescription (Rx)
-                  </label>
                 </div>
 
                 {orderRx && (
                   <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 pt-1">
                     <div className="sm:col-span-2">
-                      <label className="block text-[11px] text-slate-600 mb-0.5">Medication</label>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase">Medication</label>
                       <select
                         value={rxDrugCode}
                         onChange={(e) => setRxDrugCode(e.target.value)}
-                        className="w-full border border-slate-300 rounded p-1.5 bg-white text-xs"
+                        className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs bg-white outline-hidden cursor-pointer font-medium"
                       >
                         {drugInventory.map((d) => (
                           <option key={d.drugCode} value={d.drugCode}>
-                            {d.genericName} ({d.dosageForm}) - Stock: {d.stockQuantity}
+                            {d.genericName} ({d.stockOnHand} in stock)
                           </option>
                         ))}
                       </select>
                     </div>
+
                     <div>
-                      <label className="block text-[11px] text-slate-600 mb-0.5">Dosage</label>
-                      <input
-                        type="text"
-                        value={rxDosage}
-                        onChange={(e) => setRxDosage(e.target.value)}
-                        className="w-full border border-slate-300 rounded p-1.5 text-xs bg-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[11px] text-slate-600 mb-0.5">Frequency</label>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase">Frequency</label>
                       <input
                         type="text"
                         value={rxFrequency}
                         onChange={(e) => setRxFrequency(e.target.value)}
-                        className="w-full border border-slate-300 rounded p-1.5 text-xs bg-white"
+                        className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs bg-white outline-hidden"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase">Duration (Days)</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={rxDuration}
+                        onChange={(e) => setRxDuration(Number(e.target.value))}
+                        className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs bg-white outline-hidden font-bold font-mono"
                       />
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* Care Plan */}
-              <div>
-                <label className="block font-semibold text-slate-800 mb-1">Care Plan & Clinical Instructions</label>
-                <textarea
-                  rows={3}
-                  value={carePlan}
-                  onChange={(e) => setCarePlan(e.target.value)}
-                  className="w-full border border-slate-300 rounded p-2 text-xs focus:border-slate-600 focus:outline-hidden"
-                />
-              </div>
-
-              {/* Disposition */}
-              <div className="space-y-3">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block font-semibold text-slate-800 mb-1">Disposition / Clinical Route</label>
-                    <select
-                      value={referralDestination}
-                      onChange={(e) => setReferralDestination(e.target.value as any)}
-                      className="w-full border border-slate-300 rounded p-1.5 bg-white text-xs"
-                    >
-                      <option value="Pharmacy">Discharge to Pharmacy</option>
-                      <option value="IPD Admission">Admit to Inpatient Bed (IPD / Ward)</option>
-                      <option value="Emergency">Transfer to Emergency Department</option>
-                      <option value="Specialist Referral">Specialist Referral</option>
-                      <option value="Home Discharge">Discharge Home</option>
-                    </select>
-                  </div>
+              {/* Care Plan & Referral Destination */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="md:col-span-2">
+                  <label className="block font-bold text-slate-800 mb-1">Clinical Care Plan & Instructions</label>
+                  <textarea
+                    rows={2}
+                    value={carePlan}
+                    onChange={(e) => setCarePlan(e.target.value)}
+                    placeholder="Patient advice, dietary notes, return warnings..."
+                    className="w-full px-3 py-1.5 border border-slate-200 focus:border-emerald-600 rounded-xl text-xs bg-slate-50 focus:bg-white outline-hidden"
+                  />
                 </div>
 
-                {referralDestination === 'IPD Admission' && (
-                  <div className="p-3 bg-indigo-50/70 border border-indigo-200 rounded-lg space-y-2">
-                    <div className="font-semibold text-indigo-950 text-xs flex items-center gap-1.5">
-                      <span>Inpatient Ward & Bed Allocation</span>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-[11px] text-slate-700 font-medium mb-1">Target Specialized Ward</label>
-                        <select
-                          value={targetWard}
-                          onChange={(e) => {
-                            const newWard = e.target.value as WardCode;
-                            setTargetWard(newWard);
-                            const firstAvailable = beds.find((b) => b.wardCode === newWard && b.status === 'Available');
-                            if (firstAvailable) setTargetBed(firstAvailable.bedNumber);
-                          }}
-                          className="w-full border border-slate-300 rounded p-1.5 bg-white text-xs"
-                        >
-                          <option value="GW-MALE">Male General Ward</option>
-                          <option value="GW-FEMALE">Female General Ward</option>
-                          <option value="ICU">Intensive Care Unit (ICU)</option>
-                          <option value="PEDIATRICS">Pediatric Ward</option>
-                          <option value="MATERNITY">Maternity & Labour Ward</option>
-                          <option value="SURGICAL">Surgical Inpatient Ward</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-[11px] text-slate-700 font-medium mb-1">Select Available Bed</label>
-                        <select
-                          value={targetBed}
-                          onChange={(e) => setTargetBed(e.target.value)}
-                          className="w-full border border-slate-300 rounded p-1.5 bg-white text-xs"
-                        >
-                          {beds
-                            .filter((b) => b.wardCode === targetWard && b.status === 'Available')
-                            .map((b) => (
-                              <option key={b.bedId} value={b.bedNumber}>
-                                {b.bedNumber} ({b.oxygenPortAvailable ? 'Oxygen Ready' : 'Standard'})
-                              </option>
-                            ))}
-                          {beds.filter((b) => b.wardCode === targetWard && b.status === 'Available').length === 0 && (
-                            <option value="">No beds currently available in this ward (Will queue)</option>
-                          )}
-                        </select>
-                      </div>
-                    </div>
-                    <div className="text-[11px] text-indigo-800">
-                      Finalizing this encounter will immediately admit the patient and mark the bed as Occupied in the IPD Bed Control matrix.
-                    </div>
-                  </div>
-                )}
+                <div>
+                  <label className="block font-bold text-slate-800 mb-1">Disposition Pathway</label>
+                  <select
+                    value={referralDestination}
+                    onChange={(e) => setReferralDestination(e.target.value as any)}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs bg-slate-50 focus:bg-white outline-hidden cursor-pointer font-semibold"
+                  >
+                    <option value="Pharmacy">Outpatient Pharmacy</option>
+                    <option value="IPD Admission">Inpatient Bed Admission</option>
+                    <option value="Emergency">Emergency Transfer</option>
+                    <option value="Discharge">Direct Home Discharge</option>
+                  </select>
+                </div>
               </div>
 
-              <div className="flex justify-between pt-2 border-t border-slate-200">
+              {/* Form Navigation & Sign-off Actions */}
+              <div className="flex items-center justify-between pt-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setCurrentStep(4)}
-                  className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium px-4 py-1.5 rounded transition-colors cursor-pointer"
+                  className="flex items-center gap-1 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold text-xs transition-colors cursor-pointer"
                 >
-                  &larr; Back
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>Back</span>
                 </button>
+
                 <button
                   type="submit"
-                  className="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold px-5 py-2 rounded transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs transition-colors cursor-pointer shadow-xs"
                 >
-                  Complete & Save Consultation
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Complete & Sign Encounter</span>
                 </button>
               </div>
             </form>
           )}
 
-          {/* ENCOUNTER SUMMARY MODAL */}
-          {submittedEncounter && (
-            <div className="fixed inset-0 bg-slate-950/40 flex items-center justify-center p-4 z-50">
-              <div className="bg-white border border-slate-300 rounded-lg max-w-md w-full p-4 space-y-3 text-xs shadow-lg">
-                <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                  <span className="font-bold text-slate-900 text-sm">Consultation Completed</span>
-                  <span className="font-mono text-slate-500">{submittedEncounter.encounterId}</span>
-                </div>
+        </div>
 
-                <div className="space-y-1 text-slate-700">
-                  <div>Patient: <strong className="text-slate-900">{submittedEncounter.patientName}</strong> (MRN: {submittedEncounter.mrn})</div>
-                  <div>Consulting Doctor: <strong className="text-slate-900">{submittedEncounter.doctorName}</strong></div>
-                  <div>Diagnosis: <strong className="text-slate-900">{submittedEncounter.icd10Codes.map((c) => c.code).join(', ')}</strong></div>
-                  <div>Disposition: <strong className="text-slate-900">{submittedEncounter.referralDestination}</strong></div>
-                </div>
+      </div>
 
-                <div className="border-t border-slate-200 pt-2 flex justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSubmittedEncounter(null);
-                      setCurrentStep(1);
-                    }}
-                    className="bg-slate-900 hover:bg-slate-800 text-white font-medium px-4 py-1.5 rounded transition-colors cursor-pointer"
-                  >
-                    Done
-                  </button>
-                </div>
+      {/* ENCOUNTER SUBMITTED CONFIRMATION BANNER */}
+      {submittedEncounter && (
+        <div className="p-4 bg-emerald-50 border border-emerald-300 rounded-2xl flex items-center justify-between gap-3 text-xs animate-in fade-in duration-200">
+          <div className="flex items-center gap-2.5">
+            <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" />
+            <div>
+              <div className="font-bold text-emerald-950">
+                Clinical Encounter Completed & Signed ({submittedEncounter.encounterId})
+              </div>
+              <div className="text-emerald-800 text-[11px]">
+                Encounter chart saved to EMR. Dispatched to: {submittedEncounter.referralDestination}.
               </div>
             </div>
-          )}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setSubmittedEncounter(null)}
+            className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-xs cursor-pointer"
+          >
+            Dismiss
+          </button>
         </div>
-      </div>
+      )}
+
     </div>
   );
 };

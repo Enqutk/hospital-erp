@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
-import { UserPlus, LayoutGrid, Users, UserCheck } from 'lucide-react';
 import { useHospital } from '../../context/HospitalContext';
 import { Patient, Vitals } from '../../types';
 import { PatientDirectoryView } from '../reception/PatientDirectoryView';
-import { PatientDetailPage } from '../reception/PatientDetailPage';
 import { LiveQueueBoardView } from '../reception/LiveQueueBoardView';
 import { NewPatientModal } from '../reception/NewPatientModal';
 import { DispatchToDoctorModal } from '../reception/DispatchToDoctorModal';
+import { ReceptionPrintStationView } from '../reception/ReceptionPrintStationView';
+import { ReceptionTariffLookupView } from '../reception/ReceptionTariffLookupView';
+import { ReceptionShiftSummaryView } from '../reception/ReceptionShiftSummaryView';
+import { ReceptionAnalyticsView } from '../reception/ReceptionAnalyticsView';
+import { PatientDetailModal } from '../modals/PatientDetailModal';
 
 interface ReceptionModuleProps {
   onOpenPatientCard?: (patient: Patient) => void;
@@ -25,12 +28,14 @@ export const ReceptionModule: React.FC<ReceptionModuleProps> = ({
     setSelectedPatientMrn,
     getPatientByMrn,
     opdQueue,
-    dispatchPatientToOPD
+    dispatchPatientToOPD,
+    receptionSubView,
+    setReceptionSubView
   } = useHospital();
 
-  const [activeSubView, setActiveSubView] = useState<'DIRECTORY' | 'DETAIL' | 'QUEUE_BOARD'>('DIRECTORY');
   const [showAddPatientModal, setShowAddPatientModal] = useState(false);
   const [dispatchModalPatient, setDispatchModalPatient] = useState<Patient | null>(null);
+  const [detailModalPatient, setDetailModalPatient] = useState<Patient | null>(null);
 
   const selectedPatient = selectedPatientMrn
     ? getPatientByMrn(selectedPatientMrn) || patients[0]
@@ -38,7 +43,10 @@ export const ReceptionModule: React.FC<ReceptionModuleProps> = ({
 
   const handleSelectPatient = (mrn: string) => {
     setSelectedPatientMrn(mrn);
-    setActiveSubView('DETAIL');
+    const p = getPatientByMrn(mrn) || patients.find((x) => x.mrn === mrn);
+    if (p) {
+      setDetailModalPatient(p);
+    }
   };
 
   const handlePrintCard = (patient: Patient) => {
@@ -61,7 +69,7 @@ export const ReceptionModule: React.FC<ReceptionModuleProps> = ({
       dispatchPatientToOPD(created.mrn, targetRoom, 'Routine', vitals);
     }
     setSelectedPatientMrn(created.mrn);
-    setActiveSubView('DETAIL');
+    setDetailModalPatient(created);
   };
 
   const handleDispatchPatient = (
@@ -76,64 +84,8 @@ export const ReceptionModule: React.FC<ReceptionModuleProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* Module Header Bar */}
-      <div className="bg-white border border-slate-200 rounded-lg p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-slate-900 text-sm">Reception & Patient Registry</span>
-            <span className="text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-medium">
-              Front Desk
-            </span>
-          </div>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Master patient index, registration, electronic health records, and smart clinical routing.
-          </p>
-        </div>
-
-        {/* Top Navigation Tabs */}
-        <div className="flex items-center gap-1.5 self-start sm:self-auto">
-          <button
-            type="button"
-            onClick={() => setActiveSubView('DIRECTORY')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
-              activeSubView === 'DIRECTORY'
-                ? 'bg-slate-900 text-white'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            }`}
-          >
-            Patient Directory
-          </button>
-
-          {selectedPatient && (
-            <button
-              type="button"
-              onClick={() => setActiveSubView('DETAIL')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
-                activeSubView === 'DETAIL'
-                  ? 'bg-slate-900 text-white'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-              }`}
-            >
-              Patient Details ({selectedPatient.firstName} {selectedPatient.lastName})
-            </button>
-          )}
-
-          <button
-            type="button"
-            onClick={() => setActiveSubView('QUEUE_BOARD')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
-              activeSubView === 'QUEUE_BOARD'
-                ? 'bg-slate-900 text-white'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            }`}
-          >
-            Live OPD Queue
-          </button>
-        </div>
-      </div>
-
       {/* SUBVIEW 1: MASTER PATIENT DIRECTORY */}
-      {activeSubView === 'DIRECTORY' && (
+      {receptionSubView === 'DIRECTORY' && (
         <PatientDirectoryView
           patients={patients}
           opdQueue={opdQueue}
@@ -144,25 +96,47 @@ export const ReceptionModule: React.FC<ReceptionModuleProps> = ({
         />
       )}
 
-      {/* SUBVIEW 2: DEDICATED PATIENT DETAIL PAGE */}
-      {activeSubView === 'DETAIL' && selectedPatient && (
-        <PatientDetailPage
-          patient={selectedPatient}
-          onBack={() => setActiveSubView('DIRECTORY')}
-          onOpenDispatchModal={(patient) => setDispatchModalPatient(patient)}
-          onOpenPrintCard={handlePrintCard}
-        />
-      )}
-
-      {/* SUBVIEW 3: LIVE OPD QUEUE BOARD */}
-      {activeSubView === 'QUEUE_BOARD' && (
+      {/* SUBVIEW 2: LIVE OPD QUEUE BOARD */}
+      {receptionSubView === 'QUEUE_BOARD' && (
         <LiveQueueBoardView
           opdQueue={opdQueue}
           onSelectPatient={handleSelectPatient}
         />
       )}
 
-      {/* MODAL 1: REGISTER NEW PATIENT */}
+      {/* SUBVIEW 3: ID CARD PRINTING DESK */}
+      {receptionSubView === 'PRINT_STATION' && (
+        <ReceptionPrintStationView
+          onOpenPatientCard={handlePrintCard}
+        />
+      )}
+
+      {/* SUBVIEW 4: HOSPITAL TARIFFS & FEE SCHEDULE */}
+      {receptionSubView === 'TARIFFS' && (
+        <ReceptionTariffLookupView />
+      )}
+
+      {/* SUBVIEW 5: FRONT DESK SHIFT SUMMARY */}
+      {receptionSubView === 'SHIFT_SUMMARY' && (
+        <ReceptionShiftSummaryView />
+      )}
+
+      {/* SUBVIEW 6: INTAKE & REGISTRY ANALYTICS */}
+      {receptionSubView === 'ANALYTICS' && (
+        <ReceptionAnalyticsView />
+      )}
+
+      {/* MODAL 1: PATIENT DETAILS OVERLAY MODAL */}
+      {detailModalPatient && (
+        <PatientDetailModal
+          patient={detailModalPatient}
+          onClose={() => setDetailModalPatient(null)}
+          onOpenDispatchModal={(p) => setDispatchModalPatient(p)}
+          onOpenPrintCard={handlePrintCard}
+        />
+      )}
+
+      {/* MODAL 2: REGISTER NEW PATIENT */}
       {showAddPatientModal && (
         <NewPatientModal
           onClose={() => setShowAddPatientModal(false)}
@@ -171,7 +145,7 @@ export const ReceptionModule: React.FC<ReceptionModuleProps> = ({
         />
       )}
 
-      {/* MODAL 2: DISPATCH TO OPD DOCTOR */}
+      {/* MODAL 3: DISPATCH TO OPD DOCTOR */}
       {dispatchModalPatient && (
         <DispatchToDoctorModal
           patient={dispatchModalPatient}
