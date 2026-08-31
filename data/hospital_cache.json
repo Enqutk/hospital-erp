@@ -2176,6 +2176,15 @@
       "userName": "Pharm. Henok Worku, BPharm",
       "userRole": "PHARMACIST",
       "module": "Security & Auth",
+      "action": "Staff Sign-Out",
+      "details": "User USR-07 logged out from terminal.",
+      "id": "LOG-7893",
+      "timestamp": "2026-08-31 15:56:37"
+    },
+    {
+      "userName": "Pharm. Henok Worku, BPharm",
+      "userRole": "PHARMACIST",
+      "module": "Security & Auth",
       "action": "Quick Role Activation",
       "details": "Active role profile switched to Lead Clinical Pharmacist",
       "id": "LOG-7807",

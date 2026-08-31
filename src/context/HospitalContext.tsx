@@ -207,6 +207,9 @@ interface HospitalContextType {
   // Cashier & POS Sub-View Navigation
   cashierSubView: string;
   setCashierSubView: (subView: string) => void;
+  // Operating Theater (OT) Sub-View Navigation
+  otSubView: string;
+  setOtSubView: (subView: string) => void;
   // Inpatient Department (IPD) Sub-View Navigation
   ipdSubView: string;
   setIpdSubView: (subView: string) => void;

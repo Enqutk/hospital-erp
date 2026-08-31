@@ -2173,6 +2173,15 @@
   ],
   "auditLogs": [
     {
+      "userName": "Pharm. Henok Worku, BPharm",
+      "userRole": "PHARMACIST",
+      "module": "Security & Auth",
+      "action": "Quick Role Activation",
+      "details": "Active role profile switched to Lead Clinical Pharmacist",
+      "id": "LOG-7807",
+      "timestamp": "2026-08-31 15:55:37"
+    },
+    {
       "userName": "Nurse Rahel Tadesse, BSN",
       "userRole": "IPD_NURSE",
       "module": "Security & Auth",
