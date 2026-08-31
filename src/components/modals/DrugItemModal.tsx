@@ -236,7 +236,7 @@ export const DrugItemModal: React.FC<DrugItemModalProps> = ({
             </button>
             <button
               type="submit"
-              className="flex items-center gap-1.5 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-semibold transition-colors cursor-pointer text-xs shadow-xs"
+              className="flex items-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-semibold transition-colors cursor-pointer text-xs shadow-xs"
             >
               {isEditing ? <Save className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
               <span>{isEditing ? 'Save Changes' : 'Add Formulary Item'}</span>

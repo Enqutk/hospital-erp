@@ -27,7 +27,9 @@ import {
   Inbox,
   Building,
   Baby,
-  Bed
+  Bed,
+  Package,
+  ShieldAlert
 } from 'lucide-react';
 import { useHospital } from '../../context/HospitalContext';
 import { UserRole } from '../../types';
@@ -52,12 +54,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
     setReceptionSubView,
     labSubView,
     setLabSubView,
+    pharmacySubView,
+    setPharmacySubView,
     ipdSubView,
     setIpdSubView,
     currentUser,
     patients = [],
     emergencyRecords = [],
     prescriptions = [],
+    drugInventory = [],
     labOrders = [],
     bloodUnits = [],
     bloodDonors = [],
@@ -84,6 +89,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const criticalLabAlertsCount = (labOrders || []).filter((l) => l.status === 'Critical Alert' || l.verificationStatus === 'Critical Alert').length;
   const availableBloodUnits = (bloodUnits || []).filter((u) => u.status === 'Available').length;
   const pendingRxCount = (prescriptions || []).filter((p) => p.status === 'Prescribed' || p.status === 'Dispensing').length;
+  const lowStockDrugsCount = (drugInventory || []).filter((d) => d.stockOnHand <= d.reorderTriggerLevel).length;
   const occupiedBedsCount = (beds || []).filter((b) => b.status === 'Occupied').length;
   const availableBedsCount = (beds || []).filter((b) => b.status === 'Available').length;
   const pendingOrdersCount = (admissionOrders || []).filter((o) => o.status === 'Pending Bed Allocation').length;
@@ -227,6 +233,67 @@ export const Sidebar: React.FC<SidebarProps> = ({
           subView: 'QC',
           label: 'QC & Analyzer Telemetry',
           icon: Activity
+        }
+      ]
+    }
+  ];
+
+  // Dedicated Pharmacist navigation groups
+  const pharmacistNavigationSections = [
+    {
+      group: 'Overview & Intelligence',
+      items: [
+        {
+          id: 'DASHBOARD',
+          label: 'Pharmacy Dashboard',
+          icon: LayoutDashboard
+        }
+      ]
+    },
+    {
+      group: 'Clinical Dispensary',
+      items: [
+        {
+          id: 'PHARMACY',
+          subView: 'DISPENSARY',
+          label: 'Prescription Worklist & Intake',
+          icon: Pill,
+          badge: pendingRxCount > 0 ? `${pendingRxCount} pending` : undefined
+        },
+        {
+          id: 'PHARMACY',
+          subView: 'HISTORY',
+          label: 'Dispensing Audit History',
+          icon: CheckCircle2
+        }
+      ]
+    },
+    {
+      group: 'Inventory & Multi-Store',
+      items: [
+        {
+          id: 'PHARMACY',
+          subView: 'STOCK',
+          label: 'Perpetual Stock & Batches',
+          icon: Package,
+          badge: lowStockDrugsCount > 0 ? `${lowStockDrugsCount} low` : undefined
+        },
+        {
+          id: 'PHARMACY',
+          subView: 'CONTROLLED',
+          label: 'Controlled Vault & Cold-Chain',
+          icon: ShieldAlert
+        }
+      ]
+    },
+    {
+      group: 'Shift & Analytics',
+      items: [
+        {
+          id: 'PHARMACY',
+          subView: 'ANALYTICS',
+          label: 'Dispensary Analytics',
+          icon: BarChart3
         }
       ]
     }
@@ -441,6 +508,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
     if (currentUser.role === 'LAB_TECH') {
       return labTechNavigationSections;
     }
+    if (currentUser.role === 'PHARMACIST') {
+      return pharmacistNavigationSections;
+    }
     if (currentUser.role === 'IPD_NURSE') {
       return ipdNavigationSections;
     }
@@ -467,6 +537,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     criticalLabAlertsCount,
     availableBloodUnits,
     pendingRxCount,
+    lowStockDrugsCount,
     opdWaitingCount,
     emergencyActiveCount,
     pendingLeaveCount,
@@ -481,6 +552,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }
     if (item.id === 'LAB_BLOOD' && item.subView) {
       setLabSubView(item.subView);
+    }
+    if (item.id === 'PHARMACY' && item.subView) {
+      setPharmacySubView(item.subView);
     }
     if (item.id === 'IPD' && item.subView) {
       setIpdSubView(item.subView);
@@ -536,6 +610,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   isActive = activeTab === 'RECEPTION' && (!item.subView || receptionSubView === item.subView);
                 } else if (item.id === 'LAB_BLOOD') {
                   isActive = activeTab === 'LAB_BLOOD' && (!item.subView || labSubView === item.subView);
+                } else if (item.id === 'PHARMACY') {
+                  isActive = activeTab === 'PHARMACY' && (!item.subView || pharmacySubView === item.subView);
                 } else if (item.id === 'IPD') {
                   isActive = activeTab === 'IPD' && (!item.subView || ipdSubView === item.subView);
                 } else {

@@ -2173,6 +2173,60 @@
   ],
   "auditLogs": [
     {
+      "userName": "Dr. Dawit Haile, MD",
+      "userRole": "OPD_DOCTOR",
+      "module": "Security & Auth",
+      "action": "Quick Role Activation",
+      "details": "Active role profile switched to Consultant Physician (Station 2)",
+      "id": "LOG-5352",
+      "timestamp": "2026-08-31 15:33:55"
+    },
+    {
+      "userName": "Ephrem Tesfaye, MHA",
+      "userRole": "ADMIN_HR",
+      "module": "Security & Auth",
+      "action": "Staff Sign-Out",
+      "details": "User USR-09 logged out from terminal.",
+      "id": "LOG-3543",
+      "timestamp": "2026-08-31 15:33:53"
+    },
+    {
+      "userName": "Ephrem Tesfaye, MHA",
+      "userRole": "ADMIN_HR",
+      "module": "Security & Auth",
+      "action": "Quick Role Activation",
+      "details": "Active role profile switched to Hospital Managing Director",
+      "id": "LOG-0614",
+      "timestamp": "2026-08-31 15:33:50"
+    },
+    {
+      "userName": "Ephrem Tesfaye, MHA",
+      "userRole": "ADMIN_HR",
+      "module": "Security & Auth",
+      "action": "Staff Sign-Out",
+      "details": "User USR-09 logged out from terminal.",
+      "id": "LOG-6629",
+      "timestamp": "2026-08-31 15:33:46"
+    },
+    {
+      "userName": "Ephrem Tesfaye, MHA",
+      "userRole": "ADMIN_HR",
+      "module": "Security & Auth",
+      "action": "Quick Role Activation",
+      "details": "Active role profile switched to Hospital Managing Director",
+      "id": "LOG-8736",
+      "timestamp": "2026-08-31 15:32:48"
+    },
+    {
+      "userName": "Pharm. Henok Worku, BPharm",
+      "userRole": "PHARMACIST",
+      "module": "Security & Auth",
+      "action": "Staff Sign-Out",
+      "details": "User USR-07 logged out from terminal.",
+      "id": "LOG-3417",
+      "timestamp": "2026-08-31 15:32:43"
+    },
+    {
       "userName": "Pharm. Henok Worku, BPharm",
       "userRole": "PHARMACIST",
       "module": "Security & Auth",
