@@ -4,12 +4,12 @@ import { WardCode, IPDAdmission, DoctorAdmissionOrder } from '../../types';
 import { IPDSubTab } from '../ipd/types';
 import { IPDHeader } from '../ipd/IPDHeader';
 import { IPDKpiStats } from '../ipd/IPDKpiStats';
-import { IPDSubNav } from '../ipd/IPDSubNav';
 import { DoctorOrdersTab } from '../ipd/tabs/DoctorOrdersTab';
 import { BedMatrixTab } from '../ipd/tabs/BedMatrixTab';
 import { PediatricsTab } from '../ipd/tabs/PediatricsTab';
 import { ActiveInpatientsTab } from '../ipd/tabs/ActiveInpatientsTab';
 import { DischargeClearanceTab } from '../ipd/tabs/DischargeClearanceTab';
+import { IPDAnalyticsView } from '../ipd/IPDAnalyticsView';
 import { DoctorOrderDetailView } from '../ipd/details/DoctorOrderDetailView';
 import { InpatientClinicalChartView } from '../ipd/details/InpatientClinicalChartView';
 import { AllocateBedModal } from '../ipd/modals/AllocateBedModal';
@@ -33,11 +33,12 @@ export const IPDModule: React.FC = () => {
     finalizeDischarge,
     selectedPatientMrn,
     getPatientByMrn,
-    currentUser
+    currentUser,
+    ipdSubView,
+    setIpdSubView
   } = useHospital();
 
-  // Navigation State
-  const [activeSubTab, setActiveSubTab] = useState<IPDSubTab>('DOCTOR_ORDERS');
+  const currentView: IPDSubTab = (ipdSubView as IPDSubTab) || 'DOCTOR_ORDERS';
 
   // Detail Page State (Separation of Concerns: Separate full views for details)
   const [selectedOrderForDetail, setSelectedOrderForDetail] = useState<DoctorAdmissionOrder | null>(null);
@@ -117,7 +118,7 @@ export const IPDModule: React.FC = () => {
       setSelectedAdmissionForChart(matchingAdm);
     } else {
       setSelectedOrderForDetail(null);
-      setActiveSubTab('ACTIVE_INPATIENTS');
+      setIpdSubView('ACTIVE_INPATIENTS');
     }
   };
 
@@ -175,7 +176,7 @@ export const IPDModule: React.FC = () => {
           onTransfer={(adm) => handleOpenTransferModal(adm)}
           onGoToDischargeTab={() => {
             setSelectedAdmissionForChart(null);
-            setActiveSubTab('DISCHARGE_CLEARANCE');
+            setIpdSubView('DISCHARGE_CLEARANCE');
           }}
         />
 
@@ -202,10 +203,10 @@ export const IPDModule: React.FC = () => {
         onOpenDirectAdmit={() => handleOpenDirectAdmit('PEDIATRICS')}
       />
 
-      {/* 2. KPI Overview Strip */}
+      {/* 2. KPI Overview Strip (Interactive quick-jump cards) */}
       <IPDKpiStats
-        activeSubTab={activeSubTab}
-        onSelectTab={(tab) => setActiveSubTab(tab)}
+        activeSubTab={currentView}
+        onSelectTab={(tab) => setIpdSubView(tab)}
         pendingOrdersCount={pendingOrders.length}
         totalOrdersCount={totalOrders}
         totalBedsCount={totalBeds}
@@ -218,17 +219,8 @@ export const IPDModule: React.FC = () => {
         cleaningBedsCount={cleaningBeds}
       />
 
-      {/* 3. Sub Navigation Tabs */}
-      <IPDSubNav
-        activeSubTab={activeSubTab}
-        onSelectTab={(tab) => setActiveSubTab(tab)}
-        pendingOrdersCount={pendingOrders.length}
-        totalBedsCount={totalBeds}
-        activeInpatientsCount={activeInpatients.length}
-      />
-
-      {/* 4. Active Sub-Tab View */}
-      {activeSubTab === 'DOCTOR_ORDERS' && (
+      {/* 3. Dedicated Modular Workstation View */}
+      {currentView === 'DOCTOR_ORDERS' && (
         <DoctorOrdersTab
           admissionOrders={admissionOrders}
           patients={patients}
@@ -239,7 +231,7 @@ export const IPDModule: React.FC = () => {
         />
       )}
 
-      {activeSubTab === 'BED_MATRIX' && (
+      {currentView === 'BED_MATRIX' && (
         <BedMatrixTab
           beds={beds}
           ipdAdmissions={ipdAdmissions}
@@ -250,7 +242,7 @@ export const IPDModule: React.FC = () => {
         />
       )}
 
-      {activeSubTab === 'PEDIATRICS' && (
+      {currentView === 'PEDIATRICS' && (
         <PediatricsTab
           ipdAdmissions={ipdAdmissions}
           patients={patients}
@@ -259,7 +251,7 @@ export const IPDModule: React.FC = () => {
         />
       )}
 
-      {activeSubTab === 'ACTIVE_INPATIENTS' && (
+      {currentView === 'ACTIVE_INPATIENTS' && (
         <ActiveInpatientsTab
           ipdAdmissions={ipdAdmissions}
           patients={patients}
@@ -268,12 +260,16 @@ export const IPDModule: React.FC = () => {
         />
       )}
 
-      {activeSubTab === 'DISCHARGE_CLEARANCE' && (
+      {currentView === 'DISCHARGE_CLEARANCE' && (
         <DischargeClearanceTab
           ipdAdmissions={ipdAdmissions}
           onUpdateDischargeChecklist={updateDischargeChecklist}
           onFinalizeDischarge={finalizeDischarge}
         />
+      )}
+
+      {currentView === 'ANALYTICS' && (
+        <IPDAnalyticsView />
       )}
 
       {/* 5. Modals */}

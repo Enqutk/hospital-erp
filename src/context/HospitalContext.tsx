@@ -140,8 +140,10 @@ interface HospitalContextType {
   createLabOrder: (order: Omit<LabOrder, 'labOrderId' | 'sampleIdBarcode' | 'createdAt'>) => LabOrder;
   updateLabResults: (labOrderId: string, results: LabOrder['results'], verificationStatus: LabOrder['verificationStatus']) => void;
   registerBloodDonor: (donor: Omit<BloodDonor, 'donorCardId'>) => BloodDonor;
+  updateBloodDonor: (donorCardId: string, data: Partial<BloodDonor>) => void;
   addBloodUnit: (unit: Omit<BloodUnit, 'unitId'>) => BloodUnit;
   createCrossmatch: (record: Omit<CrossmatchRecord, 'matchId' | 'timestamp'>) => CrossmatchRecord;
+  updateCrossmatch: (matchId: string, data: Partial<CrossmatchRecord>) => void;
 
   // Radiology
   radiologyOrders: RadiologyOrder[];
@@ -155,6 +157,7 @@ interface HospitalContextType {
   dispensePrescription: (rxId: string) => void;
   updateDrugStock: (drugCode: string, quantityChange: number) => void;
   addNewDrugItem: (item: DrugItem) => void;
+  updateDrugItem: (drugCode: string, data: Partial<DrugItem>) => void;
 
   // Cashier & Billing
   bills: Bill[];
@@ -192,6 +195,15 @@ interface HospitalContextType {
   // Receptionist Sub-View Navigation
   receptionSubView: string;
   setReceptionSubView: (subView: string) => void;
+  // Laboratory Sub-View Navigation
+  labSubView: string;
+  setLabSubView: (subView: string) => void;
+  // Pharmacy Sub-View Navigation
+  pharmacySubView: string;
+  setPharmacySubView: (subView: string) => void;
+  // Inpatient Department (IPD) Sub-View Navigation
+  ipdSubView: string;
+  setIpdSubView: (subView: string) => void;
 
   // Local File Cache & Storage Persistence
   storageDiagnostics: StorageDiagnostics | null;
@@ -226,6 +238,9 @@ export const HospitalProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const [activeTab, setActiveTab] = useState<string>('DASHBOARD');
   const [receptionSubView, setReceptionSubView] = useState<string>('DIRECTORY');
+  const [labSubView, setLabSubView] = useState<string>('ORDERS');
+  const [pharmacySubView, setPharmacySubView] = useState<string>('DISPENSARY');
+  const [ipdSubView, setIpdSubView] = useState<string>('DOCTOR_ORDERS');
   const [patients, setPatients] = useState<Patient[]>(INITIAL_PATIENTS);
   const [opdEncounters, setOpdEncounters] = useState<OPDEncounter[]>(INITIAL_OPD_ENCOUNTERS);
   const [opdQueue, setOpdQueue] = useState<OPDQueueItem[]>(INITIAL_OPD_QUEUE);
@@ -437,22 +452,7 @@ export const HospitalProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     localStorage.setItem('fph_lock_status', 'false');
     localStorage.setItem('fph_current_user_id', user.id);
 
-    // Navigate to user's primary module
-    const roleToTabMap: Record<UserRole, string> = {
-      RECEPTIONIST: 'RECEPTION',
-      OPD_DOCTOR: 'OPD',
-      IPD_NURSE: 'IPD',
-      EMERGENCY_OFFICER: 'EMERGENCY',
-      LAB_TECH: 'LAB_BLOOD',
-      RADIOLOGIST: 'RADIOLOGY',
-      PHARMACIST: 'PHARMACY',
-      CASHIER: 'CASHIER',
-      ADMIN_HR: 'DASHBOARD',
-      OT_COORDINATOR: 'OT'
-    };
-    if (roleToTabMap[user.role]) {
-      setActiveTab(roleToTabMap[user.role]);
-    }
+    setActiveTab('DASHBOARD');
 
     addToast('success', `Welcome, ${user.name}`, `Signed in as ${user.title} (${user.department})`);
     addAuditLog({
@@ -474,21 +474,7 @@ export const HospitalProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     localStorage.setItem('fph_lock_status', 'false');
     localStorage.setItem('fph_current_user_id', user.id);
 
-    const roleToTabMap: Record<UserRole, string> = {
-      RECEPTIONIST: 'RECEPTION',
-      OPD_DOCTOR: 'OPD',
-      IPD_NURSE: 'IPD',
-      EMERGENCY_OFFICER: 'EMERGENCY',
-      LAB_TECH: 'LAB_BLOOD',
-      RADIOLOGIST: 'RADIOLOGY',
-      PHARMACIST: 'PHARMACY',
-      CASHIER: 'CASHIER',
-      ADMIN_HR: 'DASHBOARD',
-      OT_COORDINATOR: 'OT'
-    };
-    if (roleToTabMap[user.role]) {
-      setActiveTab(roleToTabMap[user.role]);
-    }
+    setActiveTab('DASHBOARD');
 
     addToast('success', `Role Activated: ${user.title}`, `Switched to ${user.name}`);
     addAuditLog({
@@ -550,23 +536,8 @@ export const HospitalProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setCurrentUser(matchedUser);
     localStorage.setItem('fph_current_user_id', matchedUser.id);
 
-    // Auto navigate to the corresponding department tab
-    const roleToTabMap: Record<UserRole, string> = {
-      RECEPTIONIST: 'RECEPTION',
-      OPD_DOCTOR: 'OPD',
-      IPD_NURSE: 'IPD',
-      EMERGENCY_OFFICER: 'EMERGENCY',
-      LAB_TECH: 'LAB_BLOOD',
-      RADIOLOGIST: 'RADIOLOGY',
-      PHARMACIST: 'PHARMACY',
-      CASHIER: 'CASHIER',
-      ADMIN_HR: 'ADMIN',
-      OT_COORDINATOR: 'OT'
-    };
-
-    if (roleToTabMap[role]) {
-      setActiveTab(roleToTabMap[role]);
-    }
+    // Auto navigate to role dashboard
+    setActiveTab('DASHBOARD');
 
     addToast('info', `Switched Role: ${matchedUser.title}`, `Now active in ${matchedUser.department}`);
   };
@@ -1134,6 +1105,13 @@ export const HospitalProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return newDonor;
   };
 
+  const updateBloodDonor = (donorCardId: string, data: Partial<BloodDonor>) => {
+    setBloodDonors((prev) =>
+      prev.map((d) => (d.donorCardId === donorCardId ? { ...d, ...data } : d))
+    );
+    addToast('info', 'Donor Profile Updated', `Donor record ${donorCardId} updated.`);
+  };
+
   const addBloodUnit = (unit: Omit<BloodUnit, 'unitId'>): BloodUnit => {
     const unitId = `BLD-${unit.bloodGroup.replace('+', 'P').replace('-', 'N')}-${Math.floor(100 + Math.random() * 900)}`;
     const newUnit: BloodUnit = { ...unit, unitId };
@@ -1156,6 +1134,13 @@ export const HospitalProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setCrossmatchRecords((prev) => [newMatch, ...prev]);
     addToast('success', 'Crossmatch Completed', `Unit ${record.matchedUnitId} marked ${record.status}`);
     return newMatch;
+  };
+
+  const updateCrossmatch = (matchId: string, data: Partial<CrossmatchRecord>) => {
+    setCrossmatchRecords((prev) =>
+      prev.map((m) => (m.matchId === matchId ? { ...m, ...data } : m))
+    );
+    addToast('info', 'Crossmatch Record Updated', `Record ${matchId} updated.`);
   };
 
   // Radiology
@@ -1265,6 +1250,13 @@ export const HospitalProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const addNewDrugItem = (item: DrugItem) => {
     setDrugInventory((prev) => [item, ...prev]);
     addToast('success', 'New Drug Item Registered', `${item.genericName} added to perpetual stock.`);
+  };
+
+  const updateDrugItem = (drugCode: string, data: Partial<DrugItem>) => {
+    setDrugInventory((prev) =>
+      prev.map((d) => (d.drugCode === drugCode ? { ...d, ...data } : d))
+    );
+    addToast('info', 'Formulary Item Updated', `Drug ${drugCode} updated.`);
   };
 
   // Cashier & Billing
@@ -1671,8 +1663,10 @@ export const HospitalProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         createLabOrder,
         updateLabResults,
         registerBloodDonor,
+        updateBloodDonor,
         addBloodUnit,
         createCrossmatch,
+        updateCrossmatch,
 
         radiologyOrders,
         createRadiologyOrder,
@@ -1684,6 +1678,7 @@ export const HospitalProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         dispensePrescription,
         updateDrugStock,
         addNewDrugItem,
+        updateDrugItem,
 
         bills,
         billingInvoices: bills,
@@ -1718,6 +1713,12 @@ export const HospitalProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
         receptionSubView,
         setReceptionSubView,
+        labSubView,
+        setLabSubView,
+        pharmacySubView,
+        setPharmacySubView,
+        ipdSubView,
+        setIpdSubView,
 
         storageDiagnostics,
         isCacheSyncing,

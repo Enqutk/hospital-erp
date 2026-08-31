@@ -251,10 +251,10 @@ export const PatientDetailModal: React.FC<PatientDetailModalProps> = ({
                   </div>
                   <div>
                     <div className="font-bold text-slate-900 text-xs">
-                      Recommended OPD: Room {rec.roomNumber} ({rec.specialty})
+                      Recommended OPD: Room {rec.roomNumber} ({rec.station.specialty})
                     </div>
                     <div className="text-[11px] text-slate-600 mt-0.5">
-                      {rec.doctorName} • {rec.departmentWing}
+                      {rec.station.doctorName} • {rec.station.departmentWing}
                     </div>
                   </div>
                 </div>

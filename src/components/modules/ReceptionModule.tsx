@@ -8,6 +8,7 @@ import { DispatchToDoctorModal } from '../reception/DispatchToDoctorModal';
 import { ReceptionPrintStationView } from '../reception/ReceptionPrintStationView';
 import { ReceptionTariffLookupView } from '../reception/ReceptionTariffLookupView';
 import { ReceptionShiftSummaryView } from '../reception/ReceptionShiftSummaryView';
+import { ReceptionAnalyticsView } from '../reception/ReceptionAnalyticsView';
 import { PatientDetailModal } from '../modals/PatientDetailModal';
 
 interface ReceptionModuleProps {
@@ -118,6 +119,11 @@ export const ReceptionModule: React.FC<ReceptionModuleProps> = ({
       {/* SUBVIEW 5: FRONT DESK SHIFT SUMMARY */}
       {receptionSubView === 'SHIFT_SUMMARY' && (
         <ReceptionShiftSummaryView />
+      )}
+
+      {/* SUBVIEW 6: INTAKE & REGISTRY ANALYTICS */}
+      {receptionSubView === 'ANALYTICS' && (
+        <ReceptionAnalyticsView />
       )}
 
       {/* MODAL 1: PATIENT DETAILS OVERLAY MODAL */}

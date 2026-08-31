@@ -19,7 +19,15 @@ import {
   FileSpreadsheet,
   Clock,
   Send,
-  UserPlus
+  UserPlus,
+  CheckCircle2,
+  Droplet,
+  ShieldCheck,
+  BarChart3,
+  Inbox,
+  Building,
+  Baby,
+  Bed
 } from 'lucide-react';
 import { useHospital } from '../../context/HospitalContext';
 import { UserRole } from '../../types';
@@ -42,12 +50,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
     setActiveTab,
     receptionSubView,
     setReceptionSubView,
+    labSubView,
+    setLabSubView,
+    ipdSubView,
+    setIpdSubView,
     currentUser,
     patients = [],
     emergencyRecords = [],
     prescriptions = [],
     labOrders = [],
+    bloodUnits = [],
+    bloodDonors = [],
+    crossmatchRecords = [],
     beds = [],
+    admissionOrders = [],
+    ipdAdmissions = [],
     opdQueue = [],
     staffList = [],
     leaveRequests = []
@@ -63,14 +80,30 @@ export const Sidebar: React.FC<SidebarProps> = ({
     (e) => e.status === 'Triage' || e.status === 'Resuscitation' || e.status === 'Observation'
   ).length;
 
-  const pendingLabCount = (labOrders || []).filter((l) => l.status === 'Pending' || l.status === 'Sample Collected').length;
+  const pendingLabCount = (labOrders || []).filter((l) => l.status === 'Pending' || l.status === 'Sample Collected' || l.verificationStatus === 'Pending Review').length;
+  const criticalLabAlertsCount = (labOrders || []).filter((l) => l.status === 'Critical Alert' || l.verificationStatus === 'Critical Alert').length;
+  const availableBloodUnits = (bloodUnits || []).filter((u) => u.status === 'Available').length;
   const pendingRxCount = (prescriptions || []).filter((p) => p.status === 'Prescribed' || p.status === 'Dispensing').length;
   const occupiedBedsCount = (beds || []).filter((b) => b.status === 'Occupied').length;
+  const availableBedsCount = (beds || []).filter((b) => b.status === 'Available').length;
+  const pendingOrdersCount = (admissionOrders || []).filter((o) => o.status === 'Pending Bed Allocation').length;
+  const pediatricCount = (ipdAdmissions || []).filter((a) => a.wardCode === 'PEDIATRICS' && a.status === 'Active').length;
+  const activeInpatientsCount = (ipdAdmissions || []).filter((a) => a.status === 'Active').length;
   const opdWaitingCount = (opdQueue || []).filter((q) => q.status === 'Waiting').length;
   const pendingLeaveCount = (leaveRequests || []).filter((l) => l.status === 'Pending').length;
 
   // Dedicated receptionist navigation groups for Reception & Patient Registry workstation
   const receptionistNavigationSections = [
+    {
+      group: 'Overview & Intelligence',
+      items: [
+        {
+          id: 'DASHBOARD',
+          label: 'Front Desk Dashboard',
+          icon: LayoutDashboard
+        }
+      ]
+    },
     {
       group: 'Patient Registry',
       items: [
@@ -120,6 +153,141 @@ export const Sidebar: React.FC<SidebarProps> = ({
           subView: 'SHIFT_SUMMARY',
           label: 'Shift Summary & Roster',
           icon: Clock
+        }
+      ]
+    }
+  ];
+
+  // Dedicated Lab Technician navigation groups
+  const labTechNavigationSections = [
+    {
+      group: 'Overview & Intelligence',
+      items: [
+        {
+          id: 'DASHBOARD',
+          label: 'Laboratory Dashboard',
+          icon: LayoutDashboard
+        }
+      ]
+    },
+    {
+      group: 'Diagnostic Laboratory',
+      items: [
+        {
+          id: 'LAB_BLOOD',
+          subView: 'ORDERS',
+          label: 'Diagnostic Orders & Queue',
+          icon: FlaskConical,
+          badge: pendingLabCount > 0 ? `${pendingLabCount} pending` : undefined
+        },
+        {
+          id: 'LAB_BLOOD',
+          subView: 'RESULTS',
+          label: 'Result Entry & Validation',
+          icon: CheckCircle2,
+          badge: criticalLabAlertsCount > 0 ? `${criticalLabAlertsCount} alert` : undefined
+        }
+      ]
+    },
+    {
+      group: 'Transfusion Blood Bank',
+      items: [
+        {
+          id: 'LAB_BLOOD',
+          subView: 'BLOOD_BANK',
+          label: 'Blood Units & Storage',
+          icon: Droplet,
+          badge: availableBloodUnits > 0 ? `${availableBloodUnits} units` : undefined
+        },
+        {
+          id: 'LAB_BLOOD',
+          subView: 'DONORS',
+          label: 'Donor Registry & Intake',
+          icon: Users
+        },
+        {
+          id: 'LAB_BLOOD',
+          subView: 'CROSSMATCH',
+          label: 'Crossmatch & Safety',
+          icon: ShieldCheck
+        }
+      ]
+    },
+    {
+      group: 'Quality & Analytics',
+      items: [
+        {
+          id: 'LAB_BLOOD',
+          subView: 'ANALYTICS',
+          label: 'Lab Analytics & TAT',
+          icon: BarChart3
+        },
+        {
+          id: 'LAB_BLOOD',
+          subView: 'QC',
+          label: 'QC & Analyzer Telemetry',
+          icon: Activity
+        }
+      ]
+    }
+  ];
+
+  // Dedicated Inpatient Department (IPD Nurse) navigation groups
+  const ipdNavigationSections = [
+    {
+      group: 'Clinical Bed Intake',
+      items: [
+        {
+          id: 'IPD',
+          subView: 'DOCTOR_ORDERS',
+          label: 'Doctor Bed Orders',
+          icon: Inbox,
+          badge: pendingOrdersCount > 0 ? `${pendingOrdersCount} pending` : undefined,
+          isAlert: pendingOrdersCount > 0
+        },
+        {
+          id: 'IPD',
+          subView: 'BED_MATRIX',
+          label: 'Live Bed Matrix',
+          icon: Building,
+          badge: `${availableBedsCount} free`
+        }
+      ]
+    },
+    {
+      group: 'Inpatient Care Units',
+      items: [
+        {
+          id: 'IPD',
+          subView: 'ACTIVE_INPATIENTS',
+          label: 'Active Inpatients',
+          icon: UserCheck,
+          badge: activeInpatientsCount > 0 ? `${activeInpatientsCount} adm` : undefined
+        },
+        {
+          id: 'IPD',
+          subView: 'PEDIATRICS',
+          label: 'Pediatric Care (Ward 03)',
+          icon: Baby,
+          badge: pediatricCount > 0 ? `${pediatricCount} kids` : undefined
+        }
+      ]
+    },
+    {
+      group: 'Governance & Analytics',
+      items: [
+        {
+          id: 'IPD',
+          subView: 'DISCHARGE_CLEARANCE',
+          label: 'Discharge Clearances',
+          icon: CheckCircle2,
+          badge: activeInpatientsCount > 0 ? `${activeInpatientsCount}` : undefined
+        },
+        {
+          id: 'IPD',
+          subView: 'ANALYTICS',
+          label: 'Inpatient & Ward Analytics',
+          icon: BarChart3
         }
       ]
     }
@@ -231,6 +399,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       items: [
         {
           id: 'LAB_BLOOD',
+          subView: 'ORDERS',
           label: 'Lab & Blood Bank',
           icon: FlaskConical,
           role: 'LAB_TECH' as UserRole,
@@ -269,6 +438,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
     if (currentUser.role === 'RECEPTIONIST') {
       return receptionistNavigationSections;
     }
+    if (currentUser.role === 'LAB_TECH') {
+      return labTechNavigationSections;
+    }
+    if (currentUser.role === 'IPD_NURSE') {
+      return ipdNavigationSections;
+    }
 
     const isSuperAdmin = currentUser.role === 'ADMIN_HR';
 
@@ -281,12 +456,34 @@ export const Sidebar: React.FC<SidebarProps> = ({
         return { ...section, items: filteredItems };
       })
       .filter((section) => section.items.length > 0);
-  }, [currentUser.role, occupiedBedsCount, pendingLabCount, pendingRxCount, opdWaitingCount, emergencyActiveCount, pendingLeaveCount, patients.length, staffList.length]);
+  }, [
+    currentUser.role,
+    occupiedBedsCount,
+    availableBedsCount,
+    pendingOrdersCount,
+    pediatricCount,
+    activeInpatientsCount,
+    pendingLabCount,
+    criticalLabAlertsCount,
+    availableBloodUnits,
+    pendingRxCount,
+    opdWaitingCount,
+    emergencyActiveCount,
+    pendingLeaveCount,
+    patients.length,
+    staffList.length
+  ]);
 
   const handleSelectModule = (item: any) => {
     setActiveTab(item.id);
     if (item.id === 'RECEPTION' && item.subView) {
       setReceptionSubView(item.subView);
+    }
+    if (item.id === 'LAB_BLOOD' && item.subView) {
+      setLabSubView(item.subView);
+    }
+    if (item.id === 'IPD' && item.subView) {
+      setIpdSubView(item.subView);
     }
     if (onCloseMobile) {
       onCloseMobile();
@@ -337,8 +534,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 let isActive = false;
                 if (item.id === 'RECEPTION') {
                   isActive = activeTab === 'RECEPTION' && (!item.subView || receptionSubView === item.subView);
+                } else if (item.id === 'LAB_BLOOD') {
+                  isActive = activeTab === 'LAB_BLOOD' && (!item.subView || labSubView === item.subView);
+                } else if (item.id === 'IPD') {
+                  isActive = activeTab === 'IPD' && (!item.subView || ipdSubView === item.subView);
                 } else {
-                  isActive = activeTab === item.id || (item.id === 'LAB_BLOOD' && (activeTab === 'LAB' || activeTab === 'lab'));
+                  isActive = activeTab === item.id;
                 }
 
                 const isUserStation = currentUser.role === (item.role || 'RECEPTIONIST');

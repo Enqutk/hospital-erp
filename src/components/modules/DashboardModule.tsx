@@ -38,6 +38,9 @@ import {
   Legend
 } from 'recharts';
 import { useHospital } from '../../context/HospitalContext';
+import { ReceptionAnalyticsView } from '../reception/ReceptionAnalyticsView';
+import { LabAnalyticsView } from '../lab/LabAnalyticsView';
+import { IPDAnalyticsView } from '../ipd/IPDAnalyticsView';
 
 const PALETTE = {
   emerald: '#059669',
@@ -97,6 +100,20 @@ export const DashboardModule: React.FC = () => {
     surgicalProcedures = [],
     auditLogs = []
   } = useHospital();
+
+  const [adminAnalyticsTab, setAdminAnalyticsTab] = React.useState<'EXECUTIVE' | 'RECEPTION' | 'LAB' | 'IPD'>('EXECUTIVE');
+
+  if (currentUser.role === 'RECEPTIONIST') {
+    return <ReceptionAnalyticsView />;
+  }
+
+  if (currentUser.role === 'LAB_TECH') {
+    return <LabAnalyticsView />;
+  }
+
+  if (currentUser.role === 'IPD_NURSE') {
+    return <IPDAnalyticsView />;
+  }
 
   // Metrics calculations
   const totalPatients = patients.length;
@@ -315,7 +332,68 @@ export const DashboardModule: React.FC = () => {
         </div>
       </div>
 
-      {/* KPI Top Cards Grid */}
+      {/* Admin Analytics Station Switcher */}
+      {currentUser.role === 'ADMIN_HR' && (
+        <div className="flex items-center gap-1.5 bg-white p-1.5 rounded-xl border border-slate-200 shadow-xs text-xs">
+          <button
+            type="button"
+            onClick={() => setAdminAnalyticsTab('EXECUTIVE')}
+            className={`px-3.5 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+              adminAnalyticsTab === 'EXECUTIVE'
+                ? 'bg-slate-900 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            Executive Hospital Overview
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setAdminAnalyticsTab('RECEPTION')}
+            className={`px-3.5 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+              adminAnalyticsTab === 'RECEPTION'
+                ? 'bg-emerald-600 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            Front Desk & Registry Analytics
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setAdminAnalyticsTab('LAB')}
+            className={`px-3.5 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+              adminAnalyticsTab === 'LAB'
+                ? 'bg-teal-700 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            Laboratory & Blood Bank Analytics
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setAdminAnalyticsTab('IPD')}
+            className={`px-3.5 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+              adminAnalyticsTab === 'IPD'
+                ? 'bg-purple-700 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            Inpatient Wards & Bed Analytics
+          </button>
+        </div>
+      )}
+
+      {adminAnalyticsTab === 'RECEPTION' ? (
+        <ReceptionAnalyticsView />
+      ) : adminAnalyticsTab === 'LAB' ? (
+        <LabAnalyticsView />
+      ) : adminAnalyticsTab === 'IPD' ? (
+        <IPDAnalyticsView />
+      ) : (
+        <>
+          {/* KPI Top Cards Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1: OPD Status */}
         <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-xs hover:border-slate-300 transition-all">
@@ -627,6 +705,8 @@ export const DashboardModule: React.FC = () => {
           })}
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 };

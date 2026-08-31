@@ -1,6 +1,6 @@
 import { WardCode } from '../../types';
 
-export type IPDSubTab = 'BED_MATRIX' | 'DOCTOR_ORDERS' | 'PEDIATRICS' | 'ACTIVE_INPATIENTS' | 'DISCHARGE_CLEARANCE';
+export type IPDSubTab = 'BED_MATRIX' | 'DOCTOR_ORDERS' | 'PEDIATRICS' | 'ACTIVE_INPATIENTS' | 'DISCHARGE_CLEARANCE' | 'ANALYTICS';
 
 export interface WardInfo {
   code: WardCode;

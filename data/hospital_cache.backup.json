@@ -842,6 +842,21 @@
   ],
   "bloodUnits": [
     {
+      "bloodGroup": "A+",
+      "collectionDate": "2026-08-31",
+      "expiryDate": "2026-10-05",
+      "screeningClearance": {
+        "hiv": true,
+        "hbv": true,
+        "hcv": true,
+        "syphilis": true
+      },
+      "status": "Available",
+      "donorCardId": "DNR-8401",
+      "volumeMl": 450,
+      "unitId": "BLD-AP-714"
+    },
+    {
       "unitId": "BLD-A-0101",
       "bloodGroup": "A+",
       "collectionDate": "2025-05-01",
@@ -953,8 +968,8 @@
       "fullName": "Tariku Mengistu",
       "phone": "+251 911 888 222",
       "bloodGroup": "A+",
-      "lastDonationDate": "2025-05-01",
-      "donationsCount": 6,
+      "lastDonationDate": "2026-08-31",
+      "donationsCount": 7,
       "eligible": false
     },
     {
@@ -2157,6 +2172,177 @@
     }
   ],
   "auditLogs": [
+    {
+      "userName": "Dr. Bethlehem Girma, MD",
+      "userRole": "RADIOLOGIST",
+      "module": "Security & Auth",
+      "action": "Staff Sign-Out",
+      "details": "User USR-06 logged out from terminal.",
+      "id": "LOG-3924",
+      "timestamp": "2026-08-31 15:27:33"
+    },
+    {
+      "userName": "Dr. Bethlehem Girma, MD",
+      "userRole": "RADIOLOGIST",
+      "module": "Security & Auth",
+      "action": "Quick Role Activation",
+      "details": "Active role profile switched to Consultant Radiologist",
+      "id": "LOG-8655",
+      "timestamp": "2026-08-31 15:27:18"
+    },
+    {
+      "userName": "Dr. Yonas Alemayehu, MD",
+      "userRole": "EMERGENCY_OFFICER",
+      "module": "Security & Auth",
+      "action": "Staff Sign-Out",
+      "details": "User USR-04 logged out from terminal.",
+      "id": "LOG-3384",
+      "timestamp": "2026-08-31 15:27:13"
+    },
+    {
+      "userName": "Dr. Yonas Alemayehu, MD",
+      "userRole": "EMERGENCY_OFFICER",
+      "module": "Security & Auth",
+      "action": "Quick Role Activation",
+      "details": "Active role profile switched to Trauma & Emergency Specialist",
+      "id": "LOG-6354",
+      "timestamp": "2026-08-31 15:27:06"
+    },
+    {
+      "userName": "Dr. Dawit Haile, MD",
+      "userRole": "OPD_DOCTOR",
+      "module": "Security & Auth",
+      "action": "Staff Sign-Out",
+      "details": "User USR-02 logged out from terminal.",
+      "id": "LOG-3754",
+      "timestamp": "2026-08-31 15:27:03"
+    },
+    {
+      "userName": "Dr. Dawit Haile, MD",
+      "userRole": "OPD_DOCTOR",
+      "module": "Security & Auth",
+      "action": "Quick Role Activation",
+      "details": "Active role profile switched to Consultant Physician (Station 2)",
+      "id": "LOG-4510",
+      "timestamp": "2026-08-31 15:26:54"
+    },
+    {
+      "userName": "Pharm. Henok Worku, BPharm",
+      "userRole": "PHARMACIST",
+      "module": "Security & Auth",
+      "action": "Staff Sign-Out",
+      "details": "User USR-07 logged out from terminal.",
+      "id": "LOG-0560",
+      "timestamp": "2026-08-31 15:26:50"
+    },
+    {
+      "userName": "Pharm. Henok Worku, BPharm",
+      "userRole": "PHARMACIST",
+      "module": "Security & Auth",
+      "action": "Quick Role Activation",
+      "details": "Active role profile switched to Lead Clinical Pharmacist",
+      "id": "LOG-0860",
+      "timestamp": "2026-08-31 15:26:00"
+    },
+    {
+      "userName": "Amanuel Kebede, MLS",
+      "userRole": "LAB_TECH",
+      "module": "Security & Auth",
+      "action": "Staff Sign-Out",
+      "details": "User USR-05 logged out from terminal.",
+      "id": "LOG-8912",
+      "timestamp": "2026-08-31 15:25:58"
+    },
+    {
+      "userName": "Amanuel Kebede, MLS",
+      "userRole": "LAB_TECH",
+      "module": "Security & Auth",
+      "action": "Quick Role Activation",
+      "details": "Active role profile switched to Senior Medical Laboratory Scientist",
+      "id": "LOG-6253",
+      "timestamp": "2026-08-31 15:25:56"
+    },
+    {
+      "userName": "Sister Selamawit Bekele",
+      "userRole": "RECEPTIONIST",
+      "module": "Security & Auth",
+      "action": "Staff Sign-Out",
+      "details": "User USR-01 logged out from terminal.",
+      "id": "LOG-2275",
+      "timestamp": "2026-08-31 15:25:52"
+    },
+    {
+      "userName": "Sister Selamawit Bekele",
+      "userRole": "RECEPTIONIST",
+      "module": "Security & Auth",
+      "action": "Quick Role Activation",
+      "details": "Active role profile switched to Chief Admissions Officer",
+      "id": "LOG-8643",
+      "timestamp": "2026-08-31 15:21:48"
+    },
+    {
+      "userName": "Amanuel Kebede, MLS",
+      "userRole": "LAB_TECH",
+      "module": "Security & Auth",
+      "action": "Staff Sign-Out",
+      "details": "User USR-05 logged out from terminal.",
+      "id": "LOG-4932",
+      "timestamp": "2026-08-31 15:21:44"
+    },
+    {
+      "userName": "Amanuel Kebede, MLS",
+      "userRole": "LAB_TECH",
+      "module": "Security & Auth",
+      "action": "Quick Role Activation",
+      "details": "Active role profile switched to Senior Medical Laboratory Scientist",
+      "id": "LOG-3562",
+      "timestamp": "2026-08-31 15:03:33"
+    },
+    {
+      "userName": "Nurse Rahel Tadesse, BSN",
+      "userRole": "IPD_NURSE",
+      "module": "Security & Auth",
+      "action": "Staff Sign-Out",
+      "details": "User USR-03 logged out from terminal.",
+      "id": "LOG-2008",
+      "timestamp": "2026-08-31 15:03:32"
+    },
+    {
+      "userName": "Nurse Rahel Tadesse, BSN",
+      "userRole": "IPD_NURSE",
+      "module": "Security & Auth",
+      "action": "Quick Role Activation",
+      "details": "Active role profile switched to Charge Nurse & Bed Manager",
+      "id": "LOG-9998",
+      "timestamp": "2026-08-31 15:03:29"
+    },
+    {
+      "userName": "Ephrem Tesfaye, MHA",
+      "userRole": "ADMIN_HR",
+      "module": "Security & Auth",
+      "action": "Staff Sign-Out",
+      "details": "User USR-09 logged out from terminal.",
+      "id": "LOG-7342",
+      "timestamp": "2026-08-31 15:03:27"
+    },
+    {
+      "userName": "Ephrem Tesfaye, MHA",
+      "userRole": "ADMIN_HR",
+      "module": "Security & Auth",
+      "action": "Quick Role Activation",
+      "details": "Active role profile switched to Hospital Managing Director",
+      "id": "LOG-6830",
+      "timestamp": "2026-08-31 15:03:16"
+    },
+    {
+      "userName": "Sister Selamawit Bekele",
+      "userRole": "RECEPTIONIST",
+      "module": "Security & Auth",
+      "action": "Staff Sign-Out",
+      "details": "User USR-01 logged out from terminal.",
+      "id": "LOG-1971",
+      "timestamp": "2026-08-31 15:02:51"
+    },
     {
       "userName": "Nurse Rahel Tadesse, BSN",
       "userRole": "IPD_NURSE",
