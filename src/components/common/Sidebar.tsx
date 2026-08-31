@@ -30,7 +30,9 @@ import {
   Bed,
   Package,
   ShieldAlert,
-  DollarSign
+  DollarSign,
+  Calendar,
+  X
 } from 'lucide-react';
 import { useHospital } from '../../context/HospitalContext';
 import { UserRole } from '../../types';

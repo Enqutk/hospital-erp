@@ -2173,6 +2173,24 @@
   ],
   "auditLogs": [
     {
+      "userName": "Amanuel Kebede, MLS",
+      "userRole": "LAB_TECH",
+      "module": "Security & Auth",
+      "action": "Staff Sign-Out",
+      "details": "User USR-05 logged out from terminal.",
+      "id": "LOG-6028",
+      "timestamp": "2026-08-31 16:06:16"
+    },
+    {
+      "userName": "Dr. Yonas Alemayehu, MD",
+      "userRole": "EMERGENCY_OFFICER",
+      "module": "Security & Auth",
+      "action": "Staff Sign-Out",
+      "details": "User USR-04 logged out from terminal.",
+      "id": "LOG-0792",
+      "timestamp": "2026-08-31 15:59:30"
+    },
+    {
       "userName": "Dr. Yonas Alemayehu, MD",
       "userRole": "EMERGENCY_OFFICER",
       "module": "Security & Auth",
