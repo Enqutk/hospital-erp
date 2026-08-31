@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Menu,
   Search,
@@ -6,9 +6,14 @@ import {
   Lock,
   LogOut,
   HardDrive,
-  Database,
   User,
-  Shield
+  Shield,
+  ChevronDown,
+  Activity,
+  CheckCircle2,
+  X,
+  ExternalLink,
+  Sparkles
 } from 'lucide-react';
 import { useHospital } from '../../context/HospitalContext';
 import { StaffProfileModal } from '../auth/StaffProfileModal';
@@ -37,9 +42,27 @@ export const Header: React.FC<HeaderProps> = ({
   } = useHospital();
 
   const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [floatingMenuOpen, setFloatingMenuOpen] = useState(false);
   const [patientSearchQuery, setPatientSearchQuery] = useState('');
   const [searchDropdownOpen, setSearchDropdownOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close floating menu on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setFloatingMenuOpen(false);
+      }
+    };
+    if (floatingMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [floatingMenuOpen]);
 
   const filteredPatients = (patients || []).filter((p) => {
     const q = patientSearchQuery.toLowerCase();
@@ -73,33 +96,33 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className="bg-white/95 backdrop-blur-xs border-b border-slate-200/90 sticky top-0 z-20 shadow-2xs">
-      <div className="px-4 sm:px-6 py-2.5">
-        <div className="flex items-center justify-between gap-3">
+      <div className="px-3 sm:px-6 py-2.5 max-w-full">
+        <div className="flex items-center justify-between gap-2 sm:gap-3">
           
-          {/* Left: Mobile Trigger & Breadcrumb */}
-          <div className="flex items-center space-x-3 shrink-0">
+          {/* Left: Mobile Drawer Trigger & Department Title */}
+          <div className="flex items-center space-x-2 sm:space-x-3 shrink-0 min-w-0">
             <button
               onClick={onOpenMobileSidebar}
               className="md:hidden p-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
-              title="Open Navigation"
+              title="Open Navigation Menu"
             >
               <Menu className="w-5 h-5" />
             </button>
 
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.2 rounded-md border border-emerald-100 hidden sm:inline">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.2 rounded-md border border-emerald-100 hidden lg:inline">
                   Faya Primary Hospital
                 </span>
-                <span className="text-slate-300 text-xs hidden sm:inline">•</span>
-                <h2 className="text-sm sm:text-base font-bold text-slate-900 leading-tight">
+                <span className="text-slate-300 text-xs hidden lg:inline">•</span>
+                <h2 className="text-xs sm:text-sm md:text-base font-bold text-slate-900 leading-tight truncate">
                   {getModuleTitle(activeTab)}
                 </h2>
               </div>
             </div>
           </div>
 
-          {/* Center: Global Search Patient */}
+          {/* Center: Global Search Patient (Desktop) */}
           <div className="relative flex-1 max-w-md hidden md:block">
             <div className="relative">
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -175,10 +198,10 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </div>
 
-          {/* Right: Actions & User Session */}
-          <div className="flex items-center space-x-2">
+          {/* Right: Actions & Clean Profile Pill with Floating Dropdown Modal */}
+          <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
             
-            {/* Mobile Search Trigger Button */}
+            {/* Mobile Search Icon Toggle */}
             <button
               onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
               className="md:hidden p-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 transition-colors cursor-pointer"
@@ -187,19 +210,7 @@ export const Header: React.FC<HeaderProps> = ({
               <Search className="w-4 h-4" />
             </button>
 
-            {/* Storage & Local Cache Indicator Button */}
-            <button
-              onClick={() => setOpenStorageModal(true)}
-              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 hover:border-emerald-300 text-slate-700 text-xs font-semibold transition-all cursor-pointer shadow-2xs"
-              title="Inspect Local File Cache & Storage Persistence"
-            >
-              <HardDrive className={`w-3.5 h-3.5 text-emerald-600 ${isCacheSyncing ? 'animate-pulse' : ''}`} />
-              <span className="hidden xl:inline text-[11px] text-slate-700">
-                {isCacheSyncing ? 'Syncing Disk...' : 'File Cache'}
-              </span>
-              <span className={`w-1.5 h-1.5 rounded-full ${isCacheSyncing ? 'bg-amber-500 animate-ping' : 'bg-emerald-500'}`}></span>
-            </button>
-
+            {/* Register Patient Action */}
             {onOpenNewPatientModal && (
               <button
                 onClick={onOpenNewPatientModal}
@@ -211,49 +222,160 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
             )}
 
-            {/* Authenticated Staff User */}
-            <div className="flex items-center border-l border-slate-200 pl-1.5 sm:pl-2 gap-0.5 sm:gap-1">
+            {/* Profile Avatar Button (Triggers Floating Account Modal) */}
+            <div className="relative" ref={menuRef}>
               <button
-                onClick={() => setProfileModalOpen(true)}
-                className="flex items-center gap-2 p-1 hover:bg-slate-100/80 rounded-xl text-left transition-colors cursor-pointer"
-                title="View Profile"
+                type="button"
+                onClick={() => setFloatingMenuOpen(!floatingMenuOpen)}
+                className={`flex items-center gap-2 p-1 pl-1.5 pr-2 rounded-xl border transition-all cursor-pointer ${
+                  floatingMenuOpen
+                    ? 'bg-slate-100 border-slate-300 ring-2 ring-emerald-500/20'
+                    : 'bg-slate-50 hover:bg-slate-100 border-slate-200'
+                }`}
+                title="Account, Profile & Session Actions"
               >
-                <img
-                  src={currentUser.avatar}
-                  alt={currentUser.name}
-                  className="w-7 h-7 rounded-lg object-cover border border-slate-200 shadow-2xs"
-                />
-                <div className="hidden sm:block leading-tight">
-                  <div className="text-xs font-bold text-slate-900 truncate max-w-[110px]">
+                <div className="relative shrink-0">
+                  <img
+                    src={currentUser.avatar}
+                    alt={currentUser.name}
+                    className="w-7 h-7 rounded-lg object-cover border border-slate-200 shadow-2xs"
+                  />
+                  <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-emerald-500 border border-white rounded-full"></span>
+                </div>
+
+                <div className="hidden sm:block text-left leading-tight">
+                  <div className="text-xs font-bold text-slate-900 truncate max-w-[100px] md:max-w-[120px]">
                     {currentUser.name}
                   </div>
-                  <div className="text-[10px] text-slate-500 font-medium truncate max-w-[110px]">
+                  <div className="text-[10px] text-slate-500 font-medium truncate max-w-[100px] md:max-w-[120px]">
                     {currentUser.role.replace('_', ' ')}
                   </div>
                 </div>
+
+                <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-150 ${floatingMenuOpen ? 'rotate-180 text-slate-700' : ''}`} />
               </button>
 
-              <button
-                onClick={lockScreen}
-                className="p-1.5 text-slate-400 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-colors cursor-pointer"
-                title="Lock Terminal"
-              >
-                <Lock className="w-3.5 h-3.5" />
-              </button>
+              {/* Floating Account & Profile Modal Dropdown */}
+              {floatingMenuOpen && (
+                <div className="absolute right-0 top-full mt-2 w-72 sm:w-80 bg-white rounded-2xl shadow-2xl border border-slate-200/90 py-3 z-50 animate-in fade-in zoom-in-95 duration-150 text-xs">
+                  
+                  {/* User Profile Card Header */}
+                  <div className="px-4 pb-3 border-b border-slate-100 flex items-start gap-3">
+                    <img
+                      src={currentUser.avatar}
+                      alt={currentUser.name}
+                      className="w-12 h-12 rounded-xl object-cover border border-slate-200 shadow-xs shrink-0"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="font-bold text-slate-900 text-sm leading-tight truncate">
+                        {currentUser.name}
+                      </div>
+                      <div className="text-[11px] text-slate-500 font-medium truncate mt-0.5">
+                        {currentUser.role.replace('_', ' ')}
+                      </div>
+                      <div className="mt-1 flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[10px] font-semibold bg-emerald-50 text-emerald-700 px-2 py-0.2 rounded border border-emerald-200">
+                          {currentUser.department}
+                        </span>
+                        <span className="text-[10px] font-mono text-slate-400">
+                          ID: {currentUser.id}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
 
-              <button
-                onClick={logout}
-                className="p-1.5 text-slate-400 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                title="Sign Out"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-              </button>
+                  {/* Actions Menu */}
+                  <div className="p-2 space-y-1">
+                    
+                    {/* View Full Profile */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFloatingMenuOpen(false);
+                        setProfileModalOpen(true);
+                      }}
+                      className="w-full px-3 py-2 text-left rounded-xl hover:bg-slate-50 flex items-center justify-between text-slate-700 font-semibold transition-colors cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600 group-hover:bg-indigo-100 transition-colors">
+                          <User className="w-4 h-4" />
+                        </div>
+                        <span>Staff Profile & Credentials</span>
+                      </div>
+                      <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600" />
+                    </button>
+
+                    {/* Local File Cache Diagnostics */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFloatingMenuOpen(false);
+                        setOpenStorageModal(true);
+                      }}
+                      className="w-full px-3 py-2 text-left rounded-xl hover:bg-slate-50 flex items-center justify-between text-slate-700 font-semibold transition-colors cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100 transition-colors">
+                          <HardDrive className={`w-4 h-4 ${isCacheSyncing ? 'animate-pulse' : ''}`} />
+                        </div>
+                        <div>
+                          <div>Local File Cache & Sync</div>
+                          <div className="text-[10px] text-slate-400 font-normal">
+                            {isCacheSyncing ? 'Syncing with disk...' : 'Persistent storage active'}
+                          </div>
+                        </div>
+                      </div>
+                      <span className={`w-2 h-2 rounded-full ${isCacheSyncing ? 'bg-amber-500 animate-ping' : 'bg-emerald-500'}`} />
+                    </button>
+
+                    {/* Lock Terminal Session */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFloatingMenuOpen(false);
+                        lockScreen();
+                      }}
+                      className="w-full px-3 py-2 text-left rounded-xl hover:bg-amber-50 text-slate-700 hover:text-amber-900 font-semibold flex items-center gap-2.5 transition-colors cursor-pointer group"
+                    >
+                      <div className="p-1.5 rounded-lg bg-amber-50 text-amber-600 group-hover:bg-amber-100 transition-colors">
+                        <Lock className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div>Lock Clinical Terminal</div>
+                        <div className="text-[10px] text-slate-400 font-normal">PIN security protection</div>
+                      </div>
+                    </button>
+
+                  </div>
+
+                  {/* Prominent Log Out Button */}
+                  <div className="pt-2 px-2 border-t border-slate-100">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFloatingMenuOpen(false);
+                        logout();
+                      }}
+                      className="w-full px-3 py-2 text-left rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold flex items-center justify-between transition-colors cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <LogOut className="w-4 h-4 text-rose-600" />
+                        <span>Sign Out / End Shift</span>
+                      </div>
+                      <span className="text-[10px] font-mono text-rose-500 bg-rose-100 px-1.5 py-0.5 rounded">
+                        Exit
+                      </span>
+                    </button>
+                  </div>
+
+                </div>
+              )}
             </div>
 
           </div>
         </div>
 
-        {/* Mobile Search Row (Revealed when mobileSearchOpen is true) */}
+        {/* Mobile Search Row */}
         {mobileSearchOpen && (
           <div className="mt-2.5 pt-2 border-t border-slate-100 md:hidden relative animate-in fade-in slide-in-from-top-2 duration-150">
             <div className="relative">
