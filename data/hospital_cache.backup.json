@@ -2173,6 +2173,15 @@
   ],
   "auditLogs": [
     {
+      "userName": "Dr. Yonas Alemayehu, MD",
+      "userRole": "EMERGENCY_OFFICER",
+      "module": "Security & Auth",
+      "action": "Quick Role Activation",
+      "details": "Active role profile switched to Trauma & Emergency Specialist",
+      "id": "LOG-2385",
+      "timestamp": "2026-08-31 15:40:52"
+    },
+    {
       "userName": "Dr. Dawit Haile, MD",
       "userRole": "OPD_DOCTOR",
       "module": "Security & Auth",

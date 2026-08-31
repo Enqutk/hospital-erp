@@ -177,13 +177,23 @@ export const EmergencyCasesView: React.FC<EmergencyCasesViewProps> = ({
 
                       {/* Vitals */}
                       <td className="py-3 px-4 font-mono text-[11px]">
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-slate-900">{er.vitals.bpSystolic}/{er.vitals.bpDiastolic}</span>
-                          <span className="text-slate-300">•</span>
-                          <span className={er.vitals.heartRate > 100 ? 'text-rose-600 font-bold' : 'text-slate-700'}>{er.vitals.heartRate} bpm</span>
-                          <span className="text-slate-300">•</span>
-                          <span className={er.vitals.spO2 < 92 ? 'text-rose-600 font-bold' : 'text-slate-700'}>{er.vitals.spO2}%</span>
-                        </div>
+                        {er.vitals ? (
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-slate-900">
+                              {er.vitals.bpSystolic ?? 120}/{er.vitals.bpDiastolic ?? 80}
+                            </span>
+                            <span className="text-slate-300">•</span>
+                            <span className={(er.vitals.heartRate ?? 75) > 100 ? 'text-rose-600 font-bold' : 'text-slate-700'}>
+                              {er.vitals.heartRate ?? '--'} bpm
+                            </span>
+                            <span className="text-slate-300">•</span>
+                            <span className={(er.vitals.spO2 ?? 98) < 92 ? 'text-rose-600 font-bold' : 'text-slate-700'}>
+                              {er.vitals.spO2 ?? '--'}%
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-slate-400 text-[11px]">Pending vitals</span>
+                        )}
                       </td>
 
                       {/* Status */}

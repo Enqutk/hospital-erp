@@ -84,7 +84,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   const emergencyActiveCount = (emergencyRecords || []).filter(
-    (e) => e.status === 'Triage' || e.status === 'Resuscitation' || e.status === 'Observation'
+    (e) => e.status === 'Triaged' || e.status === 'In Trauma Bay'
+  ).length;
+  const redEmergencyCount = (emergencyRecords || []).filter(
+    (e) => e.triageLevel === 'RED' && e.status !== 'Discharged'
   ).length;
 
   const pendingLabCount = (labOrders || []).filter((l) => l.status === 'Pending' || l.status === 'Sample Collected' || l.verificationStatus === 'Pending Review').length;
@@ -326,8 +329,61 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }
   ];
 
+  // Dedicated Emergency Department navigation groups
+  const emergencyOfficerNavigationSections = [
+    {
+      group: 'Overview & Intelligence',
+      items: [
+        {
+          id: 'DASHBOARD',
+          label: 'Emergency Dashboard',
+          icon: LayoutDashboard
+        }
+      ]
+    },
+    {
+      group: 'Emergency & Resuscitation',
+      items: [
+        {
+          id: 'EMERGENCY',
+          subView: 'ACTIVE_CASES',
+          label: 'Emergency Triage & Cases',
+          icon: AlertOctagon,
+          badge: redEmergencyCount > 0 ? `${redEmergencyCount} RED` : emergencyActiveCount > 0 ? `${emergencyActiveCount} active` : undefined
+        },
+        {
+          id: 'EMERGENCY',
+          subView: 'TRAUMA_BAYS',
+          label: 'Trauma Bay & Resus Matrix',
+          icon: BedDouble
+        }
+      ]
+    },
+    {
+      group: 'Shift & Analytics',
+      items: [
+        {
+          id: 'EMERGENCY',
+          subView: 'ANALYTICS',
+          label: 'Trauma Telemetry',
+          icon: BarChart3
+        }
+      ]
+    }
+  ];
+
   // Dedicated Inpatient Department (IPD Nurse) navigation groups
   const ipdNavigationSections = [
+    {
+      group: 'Overview & Intelligence',
+      items: [
+        {
+          id: 'DASHBOARD',
+          label: 'IPD Ward Dashboard',
+          icon: LayoutDashboard
+        }
+      ]
+    },
     {
       group: 'Clinical Bed Intake',
       items: [
@@ -541,6 +597,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
     if (currentUser.role === 'PHARMACIST') {
       return pharmacistNavigationSections;
     }
+    if (currentUser.role === 'EMERGENCY_OFFICER') {
+      return emergencyOfficerNavigationSections;
+    }
     if (currentUser.role === 'IPD_NURSE') {
       return ipdNavigationSections;
     }
@@ -585,6 +644,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }
     if (item.id === 'PHARMACY' && item.subView) {
       setPharmacySubView(item.subView);
+    }
+    if (item.id === 'EMERGENCY' && item.subView) {
+      setEmergencySubView(item.subView);
     }
     if (item.id === 'IPD' && item.subView) {
       setIpdSubView(item.subView);
@@ -642,6 +704,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   isActive = activeTab === 'LAB_BLOOD' && (!item.subView || labSubView === item.subView);
                 } else if (item.id === 'PHARMACY') {
                   isActive = activeTab === 'PHARMACY' && (!item.subView || pharmacySubView === item.subView);
+                } else if (item.id === 'EMERGENCY') {
+                  isActive = activeTab === 'EMERGENCY' && (!item.subView || emergencySubView === item.subView);
                 } else if (item.id === 'IPD') {
                   isActive = activeTab === 'IPD' && (!item.subView || ipdSubView === item.subView);
                 } else {
