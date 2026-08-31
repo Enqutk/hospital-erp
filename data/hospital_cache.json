@@ -2173,6 +2173,105 @@
   ],
   "auditLogs": [
     {
+      "userName": "Ephrem Tesfaye, MHA",
+      "userRole": "ADMIN_HR",
+      "module": "Security & Auth",
+      "action": "Staff Sign-Out",
+      "details": "User USR-09 logged out from terminal.",
+      "id": "LOG-1284",
+      "timestamp": "2026-08-31 16:08:31"
+    },
+    {
+      "userName": "Ephrem Tesfaye, MHA",
+      "userRole": "ADMIN_HR",
+      "module": "Security & Auth",
+      "action": "Quick Role Activation",
+      "details": "Active role profile switched to Hospital Managing Director",
+      "id": "LOG-8567",
+      "timestamp": "2026-08-31 16:06:18"
+    },
+    {
+      "userName": "Amanuel Kebede, MLS",
+      "userRole": "LAB_TECH",
+      "module": "Security & Auth",
+      "action": "Staff Sign-Out",
+      "details": "User USR-05 logged out from terminal.",
+      "id": "LOG-6028",
+      "timestamp": "2026-08-31 16:06:16"
+    },
+    {
+      "userName": "Dr. Yonas Alemayehu, MD",
+      "userRole": "EMERGENCY_OFFICER",
+      "module": "Security & Auth",
+      "action": "Staff Sign-Out",
+      "details": "User USR-04 logged out from terminal.",
+      "id": "LOG-0792",
+      "timestamp": "2026-08-31 15:59:30"
+    },
+    {
+      "userName": "Dr. Yonas Alemayehu, MD",
+      "userRole": "EMERGENCY_OFFICER",
+      "module": "Security & Auth",
+      "action": "Quick Role Activation",
+      "details": "Active role profile switched to Trauma & Emergency Specialist",
+      "id": "LOG-7660",
+      "timestamp": "2026-08-31 15:59:27"
+    },
+    {
+      "userName": "Dr. Bethlehem Girma, MD",
+      "userRole": "RADIOLOGIST",
+      "module": "Security & Auth",
+      "action": "Staff Sign-Out",
+      "details": "User USR-06 logged out from terminal.",
+      "id": "LOG-5571",
+      "timestamp": "2026-08-31 15:59:25"
+    },
+    {
+      "userName": "Dr. Bethlehem Girma, MD",
+      "userRole": "RADIOLOGIST",
+      "module": "Security & Auth",
+      "action": "Quick Role Activation",
+      "details": "Active role profile switched to Consultant Radiologist",
+      "id": "LOG-0343",
+      "timestamp": "2026-08-31 15:59:20"
+    },
+    {
+      "userName": "Dr. Michael Assefa, FACS",
+      "userRole": "OT_COORDINATOR",
+      "module": "Security & Auth",
+      "action": "Staff Sign-Out",
+      "details": "User USR-10 logged out from terminal.",
+      "id": "LOG-6271",
+      "timestamp": "2026-08-31 15:59:16"
+    },
+    {
+      "userName": "Pharm. Henok Worku, BPharm",
+      "userRole": "PHARMACIST",
+      "module": "Security & Auth",
+      "action": "Staff Sign-Out",
+      "details": "User USR-07 logged out from terminal.",
+      "id": "LOG-7893",
+      "timestamp": "2026-08-31 15:56:37"
+    },
+    {
+      "userName": "Pharm. Henok Worku, BPharm",
+      "userRole": "PHARMACIST",
+      "module": "Security & Auth",
+      "action": "Quick Role Activation",
+      "details": "Active role profile switched to Lead Clinical Pharmacist",
+      "id": "LOG-7807",
+      "timestamp": "2026-08-31 15:55:37"
+    },
+    {
+      "userName": "Nurse Rahel Tadesse, BSN",
+      "userRole": "IPD_NURSE",
+      "module": "Security & Auth",
+      "action": "Staff Sign-Out",
+      "details": "User USR-03 logged out from terminal.",
+      "id": "LOG-4886",
+      "timestamp": "2026-08-31 15:55:34"
+    },
+    {
       "userName": "Tigist Mengistu",
       "userRole": "CASHIER",
       "module": "Security & Auth",
