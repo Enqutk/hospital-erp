@@ -83,7 +83,7 @@ const CustomChartTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-export const DashboardModule: React.FC = () => {
+const ExecutiveHospitalDashboardView: React.FC = () => {
   const {
     currentUser,
     setActiveTab,
@@ -105,30 +105,6 @@ export const DashboardModule: React.FC = () => {
   } = useHospital();
 
   const [adminAnalyticsTab, setAdminAnalyticsTab] = React.useState<'EXECUTIVE' | 'RECEPTION' | 'OPD' | 'EMERGENCY' | 'LAB' | 'PHARMACY' | 'IPD'>('EXECUTIVE');
-
-  if (currentUser.role === 'RECEPTIONIST') {
-    return <ReceptionAnalyticsView />;
-  }
-
-  if (currentUser.role === 'OPD_DOCTOR') {
-    return <DoctorAnalyticsView />;
-  }
-
-  if (currentUser.role === 'EMERGENCY_OFFICER') {
-    return <EmergencyAnalyticsView />;
-  }
-
-  if (currentUser.role === 'LAB_TECH') {
-    return <LabAnalyticsView />;
-  }
-
-  if (currentUser.role === 'PHARMACIST') {
-    return <PharmacyAnalyticsView />;
-  }
-
-  if (currentUser.role === 'IPD_NURSE') {
-    return <IPDAnalyticsView />;
-  }
 
   // Metrics calculations
   const totalPatients = patients.length;
@@ -766,4 +742,34 @@ export const DashboardModule: React.FC = () => {
       )}
     </div>
   );
+};
+
+export const DashboardModule: React.FC = () => {
+  const { currentUser } = useHospital();
+
+  if (currentUser.role === 'RECEPTIONIST') {
+    return <ReceptionAnalyticsView />;
+  }
+
+  if (currentUser.role === 'OPD_DOCTOR') {
+    return <DoctorAnalyticsView />;
+  }
+
+  if (currentUser.role === 'EMERGENCY_OFFICER') {
+    return <EmergencyAnalyticsView />;
+  }
+
+  if (currentUser.role === 'LAB_TECH') {
+    return <LabAnalyticsView />;
+  }
+
+  if (currentUser.role === 'PHARMACIST') {
+    return <PharmacyAnalyticsView />;
+  }
+
+  if (currentUser.role === 'IPD_NURSE') {
+    return <IPDAnalyticsView />;
+  }
+
+  return <ExecutiveHospitalDashboardView />;
 };

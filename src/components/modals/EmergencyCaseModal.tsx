@@ -121,28 +121,28 @@ export const EmergencyCaseModal: React.FC<EmergencyCaseModalProps> = ({
             <div className="text-center">
               <span className="text-[10px] uppercase font-bold text-slate-500 block">Blood Pressure</span>
               <span className="text-sm font-bold font-mono text-rose-700">
-                {caseRecord.vitals.bpSystolic}/{caseRecord.vitals.bpDiastolic} mmHg
+                {caseRecord.vitals?.bpSystolic ?? 120}/{caseRecord.vitals?.bpDiastolic ?? 80} mmHg
               </span>
             </div>
 
             <div className="text-center">
               <span className="text-[10px] uppercase font-bold text-slate-500 block">Heart Rate</span>
               <span className="text-sm font-bold font-mono text-rose-700">
-                {caseRecord.vitals.heartRate} bpm
+                {caseRecord.vitals?.heartRate ?? 75} bpm
               </span>
             </div>
 
             <div className="text-center">
               <span className="text-[10px] uppercase font-bold text-slate-500 block">SpO2 (Pulse Ox)</span>
               <span className="text-sm font-bold font-mono text-rose-700">
-                {caseRecord.vitals.spO2}%
+                {caseRecord.vitals?.spO2 ?? 98}%
               </span>
             </div>
 
             <div className="text-center">
               <span className="text-[10px] uppercase font-bold text-slate-500 block">GCS Score</span>
               <span className="text-sm font-bold font-mono text-rose-700">
-                {caseRecord.vitals.gcs || 15}/15
+                {caseRecord.vitals?.gcs || 15}/15
               </span>
             </div>
           </div>
