@@ -247,6 +247,7 @@ export const HospitalProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [labSubView, setLabSubView] = useState<string>('ORDERS');
   const [pharmacySubView, setPharmacySubView] = useState<string>('DISPENSARY');
   const [emergencySubView, setEmergencySubView] = useState<string>('ACTIVE_CASES');
+  const [cashierSubView, setCashierSubView] = useState<string>('INVOICES');
   const [ipdSubView, setIpdSubView] = useState<string>('DOCTOR_ORDERS');
   const [patients, setPatients] = useState<Patient[]>(INITIAL_PATIENTS);
   const [opdEncounters, setOpdEncounters] = useState<OPDEncounter[]>(INITIAL_OPD_ENCOUNTERS);
@@ -1726,6 +1727,8 @@ export const HospitalProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setPharmacySubView,
         emergencySubView,
         setEmergencySubView,
+        cashierSubView,
+        setCashierSubView,
         ipdSubView,
         setIpdSubView,
 

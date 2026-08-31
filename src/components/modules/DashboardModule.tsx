@@ -44,6 +44,7 @@ import { IPDAnalyticsView } from '../ipd/IPDAnalyticsView';
 import { PharmacyAnalyticsView } from '../pharmacy/PharmacyAnalyticsView';
 import { DoctorAnalyticsView } from '../opd/DoctorAnalyticsView';
 import { EmergencyAnalyticsView } from '../emergency/EmergencyAnalyticsView';
+import { CashierAnalyticsView } from '../cashier/CashierAnalyticsView';
 
 const PALETTE = {
   emerald: '#059669',
@@ -400,6 +401,18 @@ const ExecutiveHospitalDashboardView: React.FC = () => {
 
           <button
             type="button"
+            onClick={() => setAdminAnalyticsTab('CASHIER')}
+            className={`px-3.5 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+              adminAnalyticsTab === 'CASHIER'
+                ? 'bg-emerald-700 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            Cashier & POS Analytics
+          </button>
+
+          <button
+            type="button"
             onClick={() => setAdminAnalyticsTab('IPD')}
             className={`px-3.5 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
               adminAnalyticsTab === 'IPD'
@@ -422,6 +435,8 @@ const ExecutiveHospitalDashboardView: React.FC = () => {
         <LabAnalyticsView />
       ) : adminAnalyticsTab === 'PHARMACY' ? (
         <PharmacyAnalyticsView />
+      ) : adminAnalyticsTab === 'CASHIER' ? (
+        <CashierAnalyticsView />
       ) : adminAnalyticsTab === 'IPD' ? (
         <IPDAnalyticsView />
       ) : (
@@ -765,6 +780,10 @@ export const DashboardModule: React.FC = () => {
 
   if (currentUser.role === 'PHARMACIST') {
     return <PharmacyAnalyticsView />;
+  }
+
+  if (currentUser.role === 'CASHIER') {
+    return <CashierAnalyticsView />;
   }
 
   if (currentUser.role === 'IPD_NURSE') {

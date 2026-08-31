@@ -493,7 +493,7 @@ export const OPDModule: React.FC<OPDModuleProps> = ({ onOpenRxPrint }) => {
               </span>
             </div>
             <p className="text-slate-500 text-xs mt-0.5">
-              Attending: <strong className="text-slate-800">{currentStationInfo.doctorName}</strong> • {currentStationInfo.description}
+              Attending: <strong className="text-slate-800">{currentStationInfo.doctorName}</strong> • {currentStationInfo.specialty}
             </p>
           </div>
         </div>

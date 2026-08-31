@@ -29,7 +29,8 @@ import {
   Baby,
   Bed,
   Package,
-  ShieldAlert
+  ShieldAlert,
+  DollarSign
 } from 'lucide-react';
 import { useHospital } from '../../context/HospitalContext';
 import { UserRole } from '../../types';
@@ -58,11 +59,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
     setPharmacySubView,
     emergencySubView,
     setEmergencySubView,
+    cashierSubView,
+    setCashierSubView,
     ipdSubView,
     setIpdSubView,
     currentUser,
     patients = [],
     emergencyRecords = [],
+    billingInvoices = [],
     prescriptions = [],
     drugInventory = [],
     labOrders = [],
@@ -88,6 +92,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ).length;
   const redEmergencyCount = (emergencyRecords || []).filter(
     (e) => e.triageLevel === 'RED' && e.status !== 'Discharged'
+  ).length;
+
+  const pendingUnpaidBillsCount = (billingInvoices || []).filter(
+    (b) => b.status === 'Pending' || b.status === 'Insurance Pending'
   ).length;
 
   const pendingLabCount = (labOrders || []).filter((l) => l.status === 'Pending' || l.status === 'Sample Collected' || l.verificationStatus === 'Pending Review').length;
@@ -372,6 +380,55 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }
   ];
 
+  // Dedicated Cashier & POS navigation groups
+  const cashierNavigationSections = [
+    {
+      group: 'Overview & Intelligence',
+      items: [
+        {
+          id: 'DASHBOARD',
+          label: 'Cashier POS Dashboard',
+          icon: LayoutDashboard
+        }
+      ]
+    },
+    {
+      group: 'POS & Billing Operations',
+      items: [
+        {
+          id: 'CASHIER',
+          subView: 'INVOICES',
+          label: 'Patient Billing & POS',
+          icon: Receipt,
+          badge: pendingUnpaidBillsCount > 0 ? `${pendingUnpaidBillsCount} unpaid` : undefined
+        },
+        {
+          id: 'CASHIER',
+          subView: 'LEDGER',
+          label: 'Completed Ledger & Audit',
+          icon: DollarSign
+        },
+        {
+          id: 'CASHIER',
+          subView: 'CBHI_CLAIMS',
+          label: 'CBHI & Insurance Claims',
+          icon: ShieldCheck
+        }
+      ]
+    },
+    {
+      group: 'Shift & Intelligence',
+      items: [
+        {
+          id: 'CASHIER',
+          subView: 'ANALYTICS',
+          label: 'Revenue Analytics',
+          icon: BarChart3
+        }
+      ]
+    }
+  ];
+
   // Dedicated Inpatient Department (IPD Nurse) navigation groups
   const ipdNavigationSections = [
     {
@@ -600,6 +657,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
     if (currentUser.role === 'EMERGENCY_OFFICER') {
       return emergencyOfficerNavigationSections;
     }
+    if (currentUser.role === 'CASHIER') {
+      return cashierNavigationSections;
+    }
     if (currentUser.role === 'IPD_NURSE') {
       return ipdNavigationSections;
     }
@@ -647,6 +707,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }
     if (item.id === 'EMERGENCY' && item.subView) {
       setEmergencySubView(item.subView);
+    }
+    if (item.id === 'CASHIER' && item.subView) {
+      setCashierSubView(item.subView);
     }
     if (item.id === 'IPD' && item.subView) {
       setIpdSubView(item.subView);
@@ -706,6 +769,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   isActive = activeTab === 'PHARMACY' && (!item.subView || pharmacySubView === item.subView);
                 } else if (item.id === 'EMERGENCY') {
                   isActive = activeTab === 'EMERGENCY' && (!item.subView || emergencySubView === item.subView);
+                } else if (item.id === 'CASHIER') {
+                  isActive = activeTab === 'CASHIER' && (!item.subView || cashierSubView === item.subView);
                 } else if (item.id === 'IPD') {
                   isActive = activeTab === 'IPD' && (!item.subView || ipdSubView === item.subView);
                 } else {
